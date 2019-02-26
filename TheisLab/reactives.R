@@ -1,5 +1,5 @@
 # require(ggplot2)
-# 
+#
 # gbmPheatmap <- function(gbm, genes_to_plot, cells_to_plot, n_genes = 5, colour = NULL,
 #                         limits = c(-3, 3)) {
 #   if (DEBUG) cat(file = stderr(), "gbmPheatmap\n")
@@ -60,8 +60,8 @@
 #     annotation_names_col = FALSE, annotation_colors = anno_colors
 #   )
 # }
-# 
-# 
+#
+#
 # crHeatImage_func <- function(gbm, projections, prioritized_genes) {
 #   example_K <- length(levels(projections$dbCluster))
 #   # max is 30 for number of clusters
@@ -71,9 +71,9 @@
 #     example_Cols <- rev(brewer.pal(12, "Set3")) # customize plotting colors
 #   }
 #   cells_to_plot <- order_cell_by_clusters(gbm, as.numeric(as.character(projections$dbCluster)))
-# 
+#
 #   example_col <- example_Cols[1:example_K]
-# 
+#
 #   # For high-res displays, this will be greater than 1
 #   # if (!is.null(session)){
 #   #   pixelratio <- session$clientData$pixelratio
@@ -91,17 +91,17 @@
 #   if (is.null(height)) {
 #     height <- 96 * 12
 #   }
-# 
+#
 #   # px to inch conversion
 #   myPNGwidth <- width / 96
 #   myPNGheight <- height / 96
-# 
+#
 #   # outfile <- paste0(tempdir(),'/crHeatImage.svg')
 #   outfile <- paste0(tempdir(), "/crHeatImage.png")
 #   if (DEBUG) cat(file = stderr(), paste("output file: ", outfile, "\n"))
 #   if (DEBUG) cat(file = stderr(), paste("output file normalized: ", normalizePath(outfile, mustWork = FALSE), "\n"))
 #   logGB <- log_gene_bc_matrix(gbm)
-# 
+#
 #   retVal <- tryCatch({
 #     gbmPheatmap(
 #       gbm = logGB,
@@ -128,7 +128,7 @@
 #   }
 #   )
 # }
-# 
+#
 # crHeatImage <- reactive({
 #   if (DEBUG) cat(file = stderr(), "output$crHeatImage\n")
 #   gbm <- gbm()
@@ -150,11 +150,11 @@
 #   if (!is.null(getDefaultReactiveDomain())) {
 #     removeNotification(id = "crHeatMap")
 #   }
-# 
+#
 #   return(retVal)
 # })
-# 
-# 
+#
+#
 # prioritized_genes_func <- function(gbm, projections, seed) {
 #   set.seed(seed = seed)
 #   retVal <- tryCatch({
@@ -179,10 +179,10 @@
 #   if (!is.null(getDefaultReactiveDomain())) {
 #     removeNotification(id = "crpriotGenes")
 #   }
-# 
+#
 #   return(retVal)
 # }
-# 
+#
 # crPrioGenesTable <- reactive({
 #   require("forcats")
 #   require("tidyverse")
@@ -193,13 +193,13 @@
 #   if (is.null(prioritized_genes)) {
 #     return(NULL)
 #   }
-# 
-# 
+#
+#
 #   if (DEBUGSAVE) {
 #     save(file = "~/scShinyHubDebug/crPrioGenes.RData", list = c(ls(), ls(envir = globalenv())))
 #   }
 #   # load(file="~/scShinyHubDebug/crPrioGenes.RData")
-# 
+#
 #   dt <- data.frame()
 #   for (listIter in 1:length(prioritized_genes)) {
 #     prioritized_genes[[listIter]]$cluster <- listIter
@@ -207,18 +207,18 @@
 #   }
 #   rownames(dt) <- make.unique(as.character(dt$gene_name), sep = "___")
 #   dt$cluster <- factor(dt$cluster)
-# 
+#
 #   # move cluster column to second position
 #   cnames <- colnames(dt)
 #   clNr <- which(cnames == "cluster")
 #   sigCol <- which(cnames == "significant")
 #   adjCol <- which(cnames == "p_adj")
 #   dt <- dt[, c(1, clNr, sigCol, adjCol, c(1:length(cnames))[-c(1, clNr, sigCol, adjCol)])]
-# 
+#
 #   return(dt)
 # })
-# 
-# 
+#
+#
 # prioritized_genes <- reactive({
 #   projections <- projections()
 #   gbm <- gbm()
@@ -229,15 +229,15 @@
 #   if (!is.null(getDefaultReactiveDomain())) {
 #     showNotification("prioritizing genes", id = "crpriotGenes", duration = NULL)
 #   }
-# 
+#
 #   if (DEBUGSAVE) {
 #     save(file = "~/scShinyHubDebug/prioritized_genes.Rdata", list = c(ls(), ls(envir = globalenv())))
 #   }
 #   # load(file='~/scShinyHubDebug/prioritized_genes.Rdata')
 #   retVal <- prioritized_genes_func(gbm, projections, seed)
 #   set.seed(seed = seed)
-# 
+#
 #   return(retVal)
 # })
-# 
+#
 # # myHeavyCalculations = list(c("prioritized_genes", "prioritized_genes"), c("crHeatImage", "crHeatImage"))

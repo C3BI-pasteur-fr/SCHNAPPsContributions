@@ -1,6 +1,6 @@
 source("reactives.R")
 
-myZippedReportFiles = c("crSignificantGenes.csv")
+myZippedReportFiles <- c("crSignificantGenes.csv")
 
 callModule(
   pHeatMapModule,

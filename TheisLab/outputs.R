@@ -1,17 +1,17 @@
 # source("reactives.R")
-# 
+#
 # myZippedReportFiles = c("crSignificantGenes.csv")
-# 
+#
 # callModule(
 #   pHeatMapModule,
 #   "crHeatmapPlotModule",
 #   crHeatImage
 # )
-# 
+#
 # # output$crHeat_plot1 <- renderImage({
 # #   crHeatImage()
 # # }, deleteFile = TRUE)
-# 
+#
 # # output$crPrioGenes <- DT::renderDataTable({
 # #   if(DEBUG)cat(file=stderr(), "output$crPrioGenes\n")
 # #   prioritized_genes = prioritized_genes()
@@ -28,15 +28,15 @@
 # #   return(dt)
 # # }, options = list(scrollX = TRUE)
 # # )
-# 
-# 
+#
+#
 # callModule(
 #   tableSelectionServer,
 #   "crPrioGenesTableModule",
 #   crPrioGenesTable
 # )
-# 
-# 
+#
+#
 # output$crSelectedGenes <- renderText({
 #   if (DEBUG) cat(file = stderr(), "crSelectedGenes\n")
 #   featureData <- featureDataReact()
@@ -46,11 +46,11 @@
 #   top.genes <- dge()
 #   top.genes$Associated.Gene.Name <-
 #     featureData[rownames(top.genes), "Associated.Gene.Name"]
-# 
+#
 #   paste0(top.genes$Associated.Gene.Name[input$dge_rows_selected], ",")
 # })
-# 
-# 
+#
+#
 # # TODO as module ?
 # # cell ranger output table
 # output$clusters5 <- renderUI({

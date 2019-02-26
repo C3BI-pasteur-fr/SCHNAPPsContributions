@@ -1,12 +1,12 @@
-# 
+#
 # menuList <- list(
 #   menuItem("CellRangerTools",
 #     tabName = "cellRanger", startExpanded = FALSE,
 #     menuSubItem("pheatmap", tabName = "crHeatMap")
 #   )
 # )
-# 
-# 
+#
+#
 # tabList <- list(
 #   crHeatMapTab = tabItem(
 #     "crHeatMap",

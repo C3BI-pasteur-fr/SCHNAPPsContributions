@@ -1,10 +1,10 @@
-myNormalizationChoices = list(
+myNormalizationChoices <- list(
   scater_norm = "scater_norm"
 )
 
 # value should be of class shiny.tag
 # will be displayed via renderUI
-myNormalizationParameters = list(
+myNormalizationParameters <- list(
   scater_norm = list(
     p(strong("Important note:")),
     p("In case you encounter an error message using the Scater normalization,
@@ -16,125 +16,135 @@ myNormalizationParameters = list(
   )
 )
 
-scGeneIdxInclude = reactive({
-  if (DEBUG)
+scGeneIdxInclude <- reactive({
+  if (DEBUG) {
     cat(file = stderr(), "scGeneIdxInclude\n")
-  scGeneList = input$scaterGeneList
-  scaterReads = scaterReads()
+  }
+  scGeneList <- input$scaterGeneList
+  scaterReads <- scaterReads()
   if (is.null(scaterReads)) {
-    if (DEBUG)
+    if (DEBUG) {
       cat(file = stderr(), "scGeneIdxInclude:NULL\n")
+    }
     return(NULL)
   }
-  if (DEBUGSAVE){
+  if (DEBUGSAVE) {
     cat(file = stderr(), "scGeneIdxInclude:saving\n")
-    save(file = "~/scShinyHubDebug/scGeneIdxInclude.RData", list = c(ls(),ls(envir = globalenv())))
+    save(file = "~/scShinyHubDebug/scGeneIdxInclude.RData", list = c(ls(), ls(envir = globalenv())))
     cat(file = stderr(), "scGeneIdxInclude:saving done\n")
     # load(file = "~/scShinyHubDebug/scGeneIdxInclude.RData")
   }
   genesin <- toupper(scGeneList)
   genesin <- gsub(" ", "", genesin, fixed = TRUE)
-  genesin <- strsplit(genesin, ',')
-  if(length(genesin) == 0){
+  genesin <- strsplit(genesin, ",")
+  if (length(genesin) == 0) {
     return(NULL)
   }
   genesin <- genesin[[1]]
-  
-  retVal = which(rownames(scaterReads) %in% genesin)
+
+  retVal <- which(rownames(scaterReads) %in% genesin)
   return(retVal)
 })
 
-scGeneIdxExclude = reactive({
-  if (DEBUG)
+scGeneIdxExclude <- reactive({
+  if (DEBUG) {
     cat(file = stderr(), "scGeneIdxExclude\n")
-  scGeneList = input$scaterGeneListRM
-  scaterReads = scaterReads()
+  }
+  scGeneList <- input$scaterGeneListRM
+  scaterReads <- scaterReads()
   if (is.null(scaterReads)) {
-    if (DEBUG)
+    if (DEBUG) {
       cat(file = stderr(), "scGeneIdxExclude:NULL\n")
+    }
     return(NULL)
   }
-  if (DEBUGSAVE){
+  if (DEBUGSAVE) {
     cat(file = stderr(), "scGeneIdxExclude:saving\n")
-    save(file = "~/scShinyHubDebug/scGeneIdxExclude.RData", list = c(ls(),ls(envir = globalenv())))
+    save(file = "~/scShinyHubDebug/scGeneIdxExclude.RData", list = c(ls(), ls(envir = globalenv())))
     cat(file = stderr(), "scGeneIdxExclude:saving done\n")
     # load(file = "~/scShinyHubDebug/scGeneIdxExclude.RData")
   }
   genesin <- toupper(scGeneList)
   genesin <- gsub(" ", "", genesin, fixed = TRUE)
-  genesin <- strsplit(genesin, ',')
-  if(length(genesin) == 0){
+  genesin <- strsplit(genesin, ",")
+  if (length(genesin) == 0) {
     return(NULL)
   }
   genesin <- genesin[[1]]
-  
-  retVal = which(rownames(scaterReads) %in% genesin)
+
+  retVal <- which(rownames(scaterReads) %in% genesin)
   return(retVal)
 })
 
 scater_norm <- reactive({
-  if (DEBUG)
+  if (DEBUG) {
     cat(file = stderr(), "scater normalization\n")
-  gbm = gbm()
+  }
+  gbm <- gbm()
   # sampleInfo = inputSample()
-  sampinfo = sampleInfo()
-  scaterReads = scaterReads()
-  scGeneIdxInclude = scGeneIdxInclude()
-  scGeneIdxExclude = scGeneIdxExclude()
-  minExpression = ncol(scaterReads)/10
-  
-  
+  sampinfo <- sampleInfo()
+  scaterReads <- scaterReads()
+  scGeneIdxInclude <- scGeneIdxInclude()
+  scGeneIdxExclude <- scGeneIdxExclude()
+  minExpression <- ncol(scaterReads) / 10
+
+
   require(scater)
   require(scran)
-  
+
   if (is.null(gbm) | is.null(sampinfo)) {
-    if (DEBUG)
+    if (DEBUG) {
       cat(file = stderr(), "scater_norm:NULL\n")
+    }
     return(NULL)
   }
-  if (DEBUGSAVE){
+  if (DEBUGSAVE) {
     cat(file = stderr(), "scater_norm:saving\n")
-    save(file = "~/scShinyHubDebug/scater_norm.RData", list = c(ls(),ls(envir = globalenv())))
+    save(file = "~/scShinyHubDebug/scater_norm.RData", list = c(ls(), ls(envir = globalenv())))
     cat(file = stderr(), "scater_norm:saving done\n")
     # exit()
   }
   # load(file="~/scShinyHubDebug/scater_norm.RData")
   # t(as.matrix(table(sampleInfo$sample)))[1,]
-  cdata = colData(scaterReads)
-  cdata$Treatment = sampinfo
-  colData(scaterReads) = cdata
-  genes2use = rep(TRUE, nrow(scaterReads))
+  cdata <- colData(scaterReads)
+  cdata$Treatment <- sampinfo
+  colData(scaterReads) <- cdata
+  genes2use <- rep(TRUE, nrow(scaterReads))
   if (length(scGeneIdxInclude) == 0) {
     filter_by_expr_features <- (scaterReads$total_features_by_counts > minExpression)
     scaterReads$use <- (
       filter_by_expr_features
     )
   } else {
-    genes2use = rep(FALSE, nrow(scaterReads))
-    genes2use[scGeneIdxInclude] = TRUE
+    genes2use <- rep(FALSE, nrow(scaterReads))
+    genes2use[scGeneIdxInclude] <- TRUE
   }
   if (length(scGeneIdxExclude) > 0) {
-    genes2use[scGeneIdxExclude] = FALSE
+    genes2use[scGeneIdxExclude] <- FALSE
   }
-  
-  # TODO 
+
+  # TODO
   # check if success, there might be too little genes selected
   # print the necessary error message
-  scaterReads <- scran::computeSumFactors(scaterReads, sizes = seq(21, min(table(sampinfo),100), 5), 
-                                          clusters = sampinfo, subset.row = genes2use)
+  scaterReads <- scran::computeSumFactors(scaterReads,
+    sizes = seq(21, min(table(sampinfo), 100), 5),
+    clusters = sampinfo, subset.row = genes2use
+  )
   # summary(sizeFactors(scaterReads))
-  plot(sizeFactors(scaterReads), scaterReads$total_counts/1e6, log="xy",
-       ylab="Library size (millions)", xlab="Size factor")
+  plot(sizeFactors(scaterReads), scaterReads$total_counts / 1e6,
+    log = "xy",
+    ylab = "Library size (millions)", xlab = "Size factor"
+  )
   scaterReads <- normalize(scaterReads)
-  plotExplanatoryVariables(scaterReads, variables=c("total_features_by_counts",
-                                                    "log10_total_features_by_counts", "pct_counts_in_top_100_features"))
-  if (DEBUG)
+  plotExplanatoryVariables(scaterReads, variables = c(
+    "total_features_by_counts",
+    "log10_total_features_by_counts", "pct_counts_in_top_100_features"
+  ))
+  if (DEBUG) {
     cat(file = stderr(), "gbm_logNormalization:Done\n")
-  retVal = SummarizedExperiment::assays(scaterReads)$logcounts
-  rownames(retVal) = rownames(gbm)
-  retVal = newGeneBCMatrix(retVal, pd=pData(gbm), fd=fData(gbm))
+  }
+  retVal <- SummarizedExperiment::assays(scaterReads)$logcounts
+  rownames(retVal) <- rownames(gbm)
+  retVal <- newGeneBCMatrix(retVal, pd = pData(gbm), fd = fData(gbm))
   return(retVal)
-  
 })
-
-

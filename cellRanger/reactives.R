@@ -64,7 +64,8 @@ gbmPheatmap <- function(gbm, genes_to_plot, cells_to_plot, n_genes = 5, colour =
 
 crHeatImage_func <- function(gbm, projections, prioritized_genes) {
   on.exit(
-    removeNotification(id = "crHeatMap")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "crHeatMap")
   )
   example_K <- length(levels(projections$dbCluster))
   # max is 30 for number of clusters
@@ -92,7 +93,7 @@ crHeatImage_func <- function(gbm, projections, prioritized_genes) {
     width <- 96 * 7
   } # 7x7 inch output
   if (is.null(height)) {
-    height <- 96 * 12
+    height <- 96 * 18
   }
 
   # px to inch conversion
@@ -128,7 +129,8 @@ crHeatImage_func <- function(gbm, projections, prioritized_genes) {
 
 crHeatImage <- reactive({
   on.exit(
-    removeNotification(id = "crHeatMap")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "crHeatMap")
   )
   if (DEBUG) cat(file = stderr(), "output$crHeatImage\n")
   gbm <- gbm()
@@ -154,7 +156,8 @@ crHeatImage <- reactive({
 
 prioritized_genes_func <- function(gbm, projections, seed) {
   on.exit(
-    removeNotification(id = "crpriotGenes")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "crpriotGenes")
   )
   set.seed(seed = seed)
   retVal <- tryCatch({

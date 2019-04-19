@@ -1,3 +1,5 @@
+require(ElPiGraph.R)
+
 drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = NULL,
                                   show_labels_row = FALSE, show_labels_col = FALSE, scale_features = TRUE,
                                   ...) {
@@ -144,16 +146,17 @@ scorpiusTrajectory <- reactive({
     save(file = "~/scShinyHubDebug/scorpiusTrajectory.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/scShinyHubDebug/scorpiusTrajectory.RData")
-  traj <- infer_trajectory(space)
+  require(SCORPIUS)
+  traj <- SCORPIUS::infer_trajectory(space)
   return(traj)
 })
 
 scorpiusExpSel <- reactive({
-  gbm_log <- gbm_log()
+  scEx_log <- scEx_log()
   traj <- scorpiusTrajectory()
   doCalc <- input$scorpiusCalc
 
-  if (!doCalc | is.null(gbm_log) | is.null(traj)) {
+  if (!doCalc | is.null(scEx_log) | is.null(traj)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusExpSel:NULL\n"))
     return(NULL)
   }
@@ -162,7 +165,7 @@ scorpiusExpSel <- reactive({
   }
   # load(file="~/scShinyHubDebug/scorpiusExpSel.RData")
 
-  expression <- as.matrix(exprs(gbm_log))
+  expression <- as.matrix(assays(scEx_log)[[1]])
   gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
   maxRow <- min(500, nrow(gimp))
   gene_sel <- gimp[1:maxRow, ]
@@ -171,7 +174,7 @@ scorpiusExpSel <- reactive({
 })
 
 scorpiusModules <- reactive({
-  gbm_log <- gbm_log()
+  scEx_log <- scEx_log()
   # projections = projections()
   # space <- scorpiusSpace()
   traj <- scorpiusTrajectory()
@@ -184,7 +187,7 @@ scorpiusModules <- reactive({
   # dimCol = input$dimScorpiusCol
   doCalc <- input$scorpiusCalc
 
-  if (!doCalc | is.null(gbm_log)) {
+  if (!doCalc | is.null(scEx_log)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
     return(NULL)
   }
@@ -194,14 +197,14 @@ scorpiusModules <- reactive({
   # load(file="~/scShinyHubDebug/scorpiusModules.RData")
   # space = projections[,c(dimX, dimY)]
   # traj <- infer_trajectory(space)
-  # expression = as.matrix(exprs(gbm_log))
+  # expression = as.matrix(exprs(scEx_log))
   # gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
 
   modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = T)
   modules <- as.data.frame(modules)
-  fd <- fData(gbm_log)
+  fd <- rowData(scEx_log)
   modules$symbol <- fd[modules$feature, "symbol"]
   rownames(modules) <- make.unique(as.character(modules$symbol, sep = "___"))
   return(modules)
@@ -244,9 +247,9 @@ elpiTreeData <- reactive({
   }
 
   dimElpi <- input$dimElpi
-  gbm_matrix <- gbm_matrix()
+  scEx <- scEx()
   projections <- projections()
-  if (is.null(gbm_matrix)) {
+  if (is.null(scEx)) {
     return(NULL)
   }
   if (DEBUGSAVE) {
@@ -254,10 +257,10 @@ elpiTreeData <- reactive({
   }
 
   if (dimElpi == "elpiPCA") {
-    return(gbm_matrix)
+    return(as.matrix(assays(scEx)[[1]]))
   }
   cat(file = stderr(), "elpiTreeData should not happen\n")
-  gbm_matrix
+  assays(scEx)[[1]]
 })
 
 
@@ -282,6 +285,7 @@ elpiGraphCompute <- reactive({
   if (DEBUGSAVE) {
     base::save(file = "~/scShinyHubDebug/elpiCalc.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
+  # load("~/scShinyHubDebug/elpiCalc.RData")
   cep <- do.call(method, list(
     X = tree_data,
     NumNodes = NumNodes,

@@ -37,14 +37,21 @@ error = function(e) {
 
 
 dca_impute <- reactive({
-  if (DEBUG) {
-    cat(file = stderr(), "dca_impute\n")
+  if (DEBUG) cat(file = stderr(), "dca_impute\n")
+  
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "dca_impute")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "dca_impute")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("dca_impute", id = "dca_impute", duration = NULL)
   }
-  gbm_matrix <- gbm_matrix()
-  gbm <- gbm()
-  # load("/Users/bernd/scShinyHubDebug/coE_heatmapSOMReactive.RData")
+  
+  scEx <- scEx()
 
-  if (is.null(gbm_matrix)) {
+  if (is.null(scEx)) {
     if (DEBUG) {
       cat(file = stderr(), "dca_impute:NULL\n")
     }
@@ -58,7 +65,7 @@ dca_impute <- reactive({
   tfile <- tempfile(pattern = "dcaInput", tmpdir = tempdir(), fileext = ".csv")
   tdir <- paste0(tempdir(), "/dcaresults")
   resFile <- paste0(tdir, "/mean_norm.tsv")
-  write.csv(x = gbm_matrix, file = tfile)
+  write.csv(x = as.matrix(assays(scEx)[[1]]), file = tfile)
   system(paste("dca", tfile, tdir))
   if (!file.exists(resFile)) {
     cat(file = stderr(), "dca_impute:failed\n")
@@ -66,16 +73,25 @@ dca_impute <- reactive({
   }
   newmat <- read.csv(resFile, sep = "\t", row.names = 1)
 
-  colnames(newmat) <- colnames(gbm_matrix)
-  colnames(gbm_matrix) %in% colnames(newmat)
-  gbm_matrix[rownames(newmat), colnames(newmat)] <- as.matrix(newmat[rownames(newmat), colnames(newmat)])
-  gbm_matrix[!rownames(newmat) %in% rownames(gbm_matrix), ] <- 0
+  colnames(newmat) <- colnames(scEx)
+  # colnames(scEx) %in% colnames(newmat)
+  sc_matrix = as.matrix(assays(scEx)[[1]])
+  sc_matrix[rownames(newmat), colnames(newmat)] <- as.matrix(newmat[rownames(newmat), colnames(newmat)])
+  sc_matrix[!rownames(newmat) %in% rownames(sc_matrix), ] <- 0
   if (DEBUG) {
     cat(file = stderr(), "dca_impute:Done\n")
   }
 
-  newgbmLog <- newGeneBCMatrix(mat = as(gbm_matrix, "dgTMatrix"), fd = fData(gbm), pd = pData(gbm))
-  return(newgbmLog)
+  scEx_bcnorm <- SingleCellExperiment(assay = list(sc_matrix = as(A,"dgTMatrix")),
+                                      colData = colData(scEx),
+                                      rowData = rowData(scEx))
+  
+  x <- uniqTsparse(assays(scEx_bcnorm)[[1]])
+  slot(x, "x") <- log(1 + slot(x, "x"), base = 2) * scalingFactor
+  assays(scEx_bcnorm)[[1]] <- x
+  return(scEx_bcnorm)
+
+  
 })
 
 

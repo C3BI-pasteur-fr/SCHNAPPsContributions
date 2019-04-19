@@ -1,3 +1,4 @@
+require(ElPiGraph.R)
 
 
 # The output type has to be in line with the tablist item. I.e. plotOutput in this case
@@ -23,7 +24,8 @@ output$scropius_trajectory_plot <- renderPlot({
   }
   # load(file="~/scShinyHubDebug/scropius_trajectory_plot.RData")
   space <- projections[, c(dimX, dimY)]
-  traj <- infer_trajectory(space)
+  require(SCORPIUS)
+  traj <- SCORPIUS::infer_trajectory(space)
   draw_trajectory_plot(space, progression_group = projections[, dimCol], path = traj$path)
 })
 

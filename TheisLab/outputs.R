@@ -43,7 +43,7 @@
 #   if (is.null(featureData)) {
 #     return(NULL)
 #   }
-#   top.genes <- dge()
+#   top.genes <- sCA_dge()
 #   top.genes$Associated.Gene.Name <-
 #     featureData[rownames(top.genes), "Associated.Gene.Name"]
 #

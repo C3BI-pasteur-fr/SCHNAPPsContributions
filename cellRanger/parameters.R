@@ -16,6 +16,18 @@ myNormalizationParameters <- list(
   )
 )
 
+# output$NumberOfGenesInclude ----
+output$NumberOfGenesInclude <- renderText({
+  idx <- scGeneIdxInclude()
+  paste("Number of genes to be included: ", length(idx))
+})
+
+output$NumberOfGenesExclude <- renderText({
+  idx <- scGeneIdxExclude()
+  paste("Number of genes to be included: ", length(idx))
+})
+
+
 scGeneIdxInclude <- reactive({
   if (DEBUG) {
     cat(file = stderr(), "scGeneIdxInclude\n")
@@ -43,6 +55,7 @@ scGeneIdxInclude <- reactive({
   genesin <- genesin[[1]]
 
   retVal <- which(rownames(scaterReads) %in% genesin)
+  exportTestValues(scGeneIdxInclude = { retVal })
   return(retVal)
 })
 
@@ -73,6 +86,7 @@ scGeneIdxExclude <- reactive({
   genesin <- genesin[[1]]
 
   retVal <- which(rownames(scaterReads) %in% genesin)
+  exportTestValues(scGeneIdxExclude = { retVal })
   return(retVal)
 })
 
@@ -146,5 +160,6 @@ scater_norm <- reactive({
   retVal <- SummarizedExperiment::assays(scaterReads)$logcounts
   rownames(retVal) <- rownames(gbm)
   retVal <- newGeneBCMatrix(retVal, pd = pData(gbm), fd = fData(gbm))
+  exportTestValues(scater_norm = { retVal })
   return(retVal)
 })

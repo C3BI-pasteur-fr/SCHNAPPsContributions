@@ -43,11 +43,11 @@ output$crSelectedGenes <- renderText({
   if (is.null(featureData)) {
     return(NULL)
   }
-  top.genes <- dge()
-  top.genes$Associated.Gene.Name <-
-    featureData[rownames(top.genes), "Associated.Gene.Name"]
+  top.genes <- sCA_dge()
+  top.genes$symbol <-
+    featureData[rownames(top.genes), "symbol"]
 
-  paste0(top.genes$Associated.Gene.Name[input$dge_rows_selected], ",")
+  paste0(top.genes$symbol[input$dge_rows_selected], ",")
 })
 
 
@@ -59,11 +59,12 @@ output$clusters5 <- renderUI({
   if (is.null(projections)) {
     HTML("Please load data first")
   } else {
-    noOfClusters <- max(as.numeric(as.character(projections$dbCluster)))
+    # noOfClusters <- max(as.numeric(as.character(projections$dbCluster)))
+    noOfClusters <- levels(as.factor(projections$dbCluster))
     selectInput(
       "cluster5",
       label = "Cluster",
-      choices = c(0:noOfClusters),
+      choices = noOfClusters,
       selected = 0
     )
   }

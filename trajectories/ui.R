@@ -2,6 +2,7 @@
 # defines the main entry
 menuList <- list(
   menuItem("Trajectories",
+           # id="trajectoryID",
     tabName = "TrajectoryList", startExpanded = FALSE,
     menuSubItem("Scorpius", tabName = "scorpiusTab"), menuSubItem("ELPIGraph", tabName = "elpiGraphTab")
   )

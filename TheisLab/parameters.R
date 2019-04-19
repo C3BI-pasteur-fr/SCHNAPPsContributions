@@ -42,7 +42,7 @@ dca_impute <- reactive({
   }
   gbm_matrix <- gbm_matrix()
   gbm <- gbm()
-  # load("/Users/bernd/scShinyHubDebug/heatmapSOMReactive.RData")
+  # load("/Users/bernd/scShinyHubDebug/coE_heatmapSOMReactive.RData")
 
   if (is.null(gbm_matrix)) {
     if (DEBUG) {

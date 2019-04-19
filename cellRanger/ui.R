@@ -1,6 +1,7 @@
 
 menuList <- list(
   menuItem("CellRangerTools",
+           # id = "cellRangerToolsID",
     tabName = "cellRanger", startExpanded = FALSE,
     menuSubItem("pheatmap", tabName = "crHeatMap")
   )

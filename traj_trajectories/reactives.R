@@ -1,5 +1,9 @@
 require(ElPiGraph.R)
 
+# retVal <- drawTrajectoryHeatmap(x=expr_sel, time=traj$time, progression_group=projections[, dimCol], modules,
+#                                 filename = normalizePath(outfile, mustWork = FALSE)
+# )
+
 drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = NULL,
                                   show_labels_row = FALSE, show_labels_col = FALSE, scale_features = TRUE,
                                   ...) {
@@ -86,6 +90,17 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
 }
 
 scorpiusInput <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusInput started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusInput")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusInput")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusInput", id = "scorpiusInput", duration = NULL)
+  }
+  
   inFile <- input$trajInputFile
 
   if (DEBUGSAVE) {
@@ -108,6 +123,17 @@ scorpiusInput <- reactive({
 })
 
 scorpiusSpace <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusSpace started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusSpace")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusSpace")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusSpace", id = "scorpiusSpace", duration = NULL)
+  }
+
   projections <- projections()
   doCalc <- input$scorpiusCalc
   dimX <- input$dimScorpiusX
@@ -131,6 +157,17 @@ scorpiusSpace <- reactive({
 })
 
 scorpiusTrajectory <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusTrajectory started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusTrajectory")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusTrajectory")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusTrajectory", id = "scorpiusTrajectory", duration = NULL)
+  }
+  
   space <- scorpiusSpace()
   doCalc <- input$scorpiusCalc
   scInput <- scorpiusInput()
@@ -148,14 +185,42 @@ scorpiusTrajectory <- reactive({
   # load(file="~/scShinyHubDebug/scorpiusTrajectory.RData")
   require(SCORPIUS)
   traj <- SCORPIUS::infer_trajectory(space)
-  return(traj)
+  traj$path = data.frame(traj$path)
+  traj$path$idx <- 1:nrow(traj$path)
+  traj$path <- traj$path[order(traj$time),] 
+  rownames(traj$path) = names(sort(traj$time))
+  traj$path$time = sort(traj$time)
+  traj$path = traj$path[order(traj$path$idx),]
+  traj$path = traj$path[, -3]
+  rownames(traj$path) == names(traj$time)
+  return(traj$path)
 })
 
+# traj$path[1:10,]
+# traj$path[order(traj$path$idx)[1:10],]
+
+
 scorpiusExpSel <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusExpSel started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusExpSel")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusExpSel")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusExpSel", id = "scorpiusExpSel", duration = NULL)
+  }
+  if (!is.null(getDefaultReactiveDomain())) {
+    removeNotification( id = "scorpiusExpSelWARNING")
+  }
+  
   scEx_log <- scEx_log()
   traj <- scorpiusTrajectory()
   doCalc <- input$scorpiusCalc
-
+  scorpMaxGenes <- input$scorpMaxGenes
+  scorpRepeat <- input$scorpRepeat
+  
   if (!doCalc | is.null(scEx_log) | is.null(traj)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusExpSel:NULL\n"))
     return(NULL)
@@ -165,16 +230,36 @@ scorpiusExpSel <- reactive({
   }
   # load(file="~/scShinyHubDebug/scorpiusExpSel.RData")
 
-  expression <- as.matrix(assays(scEx_log)[[1]])
-  gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
-  maxRow <- min(500, nrow(gimp))
+  cellsNotFound <- colnames(assays(scEx_log)[[1]])[!colnames(assays(scEx_log)[[1]]) %in% rownames(traj)]
+  expression <- as.matrix(t(assays(scEx_log)[[1]][,rownames(traj)]))
+  gimp <- gene_importances(expression[rownames(traj),], traj$time, num_permutations = scorpRepeat, num_threads = 8)
+  maxRow <- min(scorpMaxGenes, nrow(gimp))
   gene_sel <- gimp[1:maxRow, ]
-  expr_sel <- t(expression)[, gene_sel$gene]
-  return(expr_sel)
+  expr_sel <- expression[, gene_sel$gene]
+
+  # dfTmp = data.frame(matrix(0,nrow = length(cellsNotFound), ncol = ncol(expr_sel)))
+  # rownames(dfTmp) = cellsNotFound
+  # colnames(dfTmp) = colnames(expr_sel)
+  # retVal = rbind(expr_sel,dfTmp)
+  return(list(expr_sel = expr_sel, gene_sel = gene_sel))
 })
 
 scorpiusModules <- reactive({
-  scEx_log <- scEx_log()
+  if (DEBUG) cat(file = stderr(), "scorpiusModules started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusModules")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusModules")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusModules", id = "scorpiusModules", duration = NULL)
+  }
+  if (!is.null(getDefaultReactiveDomain())) {
+    removeNotification( id = "scorpiusModulesWARNING")
+  }
+
+    scEx_log <- scEx_log()
   # projections = projections()
   # space <- scorpiusSpace()
   traj <- scorpiusTrajectory()
@@ -202,7 +287,7 @@ scorpiusModules <- reactive({
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
 
-  modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = T)
+  modules <- extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
   modules$symbol <- fd[modules$feature, "symbol"]
@@ -210,6 +295,54 @@ scorpiusModules <- reactive({
   return(modules)
 })
 
+scorpiusModulesTable <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusModulesTable started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusModulesTable")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusModulesTable")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusModulesTable", id = "scorpiusModulesTable", duration = NULL)
+  }
+
+  scEx_log <- scEx_log()
+  # projections = projections()
+  # space <- scorpiusSpace()
+  traj <- scorpiusTrajectory()
+  expr_sel <- scorpiusExpSel()
+  modules <- scorpiusModules()
+  
+  # scorpiusModules = scorpiusModules()
+  upI <- updateScorpiusInput() # needed to update input
+  dimX <- input$dimScorpiusX
+  dimY <- input$dimScorpiusY
+  # dimCol = input$dimScorpiusCol
+  doCalc <- input$scorpiusCalc
+  
+  if (!doCalc | is.null(scEx_log)) {
+    if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
+    return(NULL)
+  }
+  if (DEBUGSAVE) {
+    save(file = "~/scShinyHubDebug/scorpiusModulesTable.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/scShinyHubDebug/scorpiusModulesTable.RData")
+  # space = projections[,c(dimX, dimY)]
+  # traj <- infer_trajectory(space)
+  # expression = as.matrix(exprs(scEx_log))
+  # gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
+  # gene_sel <- gimp[1:50,]
+  # expr_sel <- t(expression)[,gene_sel$gene]
+  
+  gene_selDF <- as.data.frame(expr_sel$gene_sel)
+  rownames(gene_selDF) = gene_selDF[,1]
+  gene_selDF = gene_selDF[,-1]
+
+  
+  return(cbind(modules,gene_selDF[modules$feature,]))
+})
 
 updateScorpiusInput <- reactive({
   tsneData <- projections()
@@ -230,9 +363,12 @@ updateScorpiusInput <- reactive({
     selected = colnames(tsneData)[2]
   )
   updateSelectInput(session, "dimScorpiusCol",
-    choices = colnames(tsneData),
-    selected = colnames(tsneData)[2]
+                    choices = colnames(tsneData),
+                    selected = colnames(tsneData)[2]
   )
+  # updateNumericInput(session, "scorpMaxGenes",
+  #                   value = 500
+  # )
 })
 
 

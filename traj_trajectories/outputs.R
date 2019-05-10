@@ -14,7 +14,9 @@ output$scropius_trajectory_plot <- renderPlot({
     showNotification("scropius_trajectory_plot", id = "scropius_trajectory_plot", duration = NULL)
   }
   
+  traj <- scorpiusTrajectory()
   projections <- projections()
+  space <- scorpiusSpace()
   upI <- updateScorpiusInput() # needed to update input
   dimX <- input$dimScorpiusX
   dimY <- input$dimScorpiusY
@@ -34,13 +36,14 @@ output$scropius_trajectory_plot <- renderPlot({
     save(file = "~/scShinyHubDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/scShinyHubDebug/scropius_trajectory_plot.RData")
-  space <- projections[, c(dimX, dimY)]
+  # space <- projections[, c(dimX, dimY)]
   require(SCORPIUS)
-  traj <- SCORPIUS::infer_trajectory(space)
-  draw_trajectory_plot(space, progression_group = projections[, dimCol], path = traj$path)
+  # traj <- SCORPIUS::infer_trajectory(space)
+  colnames(traj) = c("Comp1", "Comp2", "time")
+  draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], path = as.matrix(traj[,1:2]))
 })
 
-callModule(tableSelectionServer, "scorpiusTableMod", scorpiusModules)
+callModule(tableSelectionServer, "scorpiusTableMod", scorpiusModulesTable)
 # selected clusters heatmap module
 
 scorpiusHeatmapPlotReactive <- reactive({
@@ -63,6 +66,9 @@ scorpiusHeatmapPlotReactive <- reactive({
   
   dimCol <- input$dimScorpiusCol
   doCalc <- input$scorpiusCalc
+  pixelratio <- session$clientData$pixelratio
+  width <- session$clientData$output_plot_width
+  height <- session$clientData$output_plot_height
   
   
   if (!doCalc | is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(traj)) {
@@ -74,10 +80,7 @@ scorpiusHeatmapPlotReactive <- reactive({
   }
   # load(file="~/scShinyHubDebug/scorpiusHeatmapPlot.RData")
   
-  pixelratio <- session$clientData$pixelratio
   if (is.null(pixelratio)) pixelratio <- 1
-  width <- session$clientData$output_plot_width
-  height <- session$clientData$output_plot_height
   if (is.null(width)) {
     width <- 96 * 7
   } # 7x7 inch output
@@ -89,12 +92,12 @@ scorpiusHeatmapPlotReactive <- reactive({
   cat(file = stderr(), paste("saving to: ", outfile, "\n"))
   
   # modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = F)
-  retVal <- drawTrajectoryHeatmap(expr_sel, traj$time, projections[, dimCol], modules,
+  retVal <- drawTrajectoryHeatmap(expr_sel$expr_sel, traj$time, projections[rownames(expr_sel$expr_sel), dimCol], modules,
                                   filename = normalizePath(outfile, mustWork = FALSE)
   )
   
   exportTestValues(scorpiusHeatmapPlotReactive = {retVal})  
-  return(retval)
+  return(retVal)
   
 })
 
@@ -105,29 +108,20 @@ callModule(
 )
 
 output$downLoadTraj <- downloadHandler(
-  if (DEBUG) cat(file = stderr(), "downLoadTraj started.\n")
-  start.time <- base::Sys.time()
-  on.exit({
-    printTimeEnd(start.time, "downLoadTraj")
-    if (!is.null(getDefaultReactiveDomain()))
-      removeNotification(id = "downLoadTraj")
-  })
-  if (!is.null(getDefaultReactiveDomain())) {
-    showNotification("downLoadTraj", id = "downLoadTraj", duration = NULL)
-  }
-  
+
   filename = paste0("scorpiusTraj.", Sys.Date(), ".csv"),
   content = function(file) {
     if (DEBUG) cat(file = stderr(), paste("downLoadTraj: \n"))
-    scTRAJ <- scorpiusTrajectory()
-    if (is.null(scTRAJ)) {
+    traj <- scorpiusTrajectory()
+    if (is.null(traj)) {
       return(NULL)
     }
-    write.csv(scTRAJ, file)
+    if (DEBUGSAVE) {
+      save(file = "~/scShinyHubDebug/downLoadTraj.RData", list = c(ls(), ls(envir = globalenv())))
+    }
+    # load(file="~/scShinyHubDebug/downLoadTraj.RData")
+    write.csv(traj, file)
   }
-  exportTestValues(downLoadTraj = {scTRAJ})  
-  return()
-  
 )
 
 
@@ -192,3 +186,4 @@ output$elpi_histo <- renderPlot({
   
   barplot(table(PointLabel), las = 2, ylab = "Number of points")
 })
+

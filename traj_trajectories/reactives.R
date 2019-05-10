@@ -1,5 +1,9 @@
 require(ElPiGraph.R)
 
+# retVal <- drawTrajectoryHeatmap(x=expr_sel, time=traj$time, progression_group=projections[, dimCol], modules,
+#                                 filename = normalizePath(outfile, mustWork = FALSE)
+# )
+
 drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = NULL,
                                   show_labels_row = FALSE, show_labels_col = FALSE, scale_features = TRUE,
                                   ...) {
@@ -16,8 +20,8 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
     )
   }
   if ((!is.null(progression_group) && !is.vector(progression_group) &&
-    !is.factor(progression_group)) || (!is.null(progression_group) &&
-    length(progression_group) != nrow(x))) {
+       !is.factor(progression_group)) || (!is.null(progression_group) &&
+                                          length(progression_group) != nrow(x))) {
     stop(sQuote("progression_group"), " must be a vector or a factor of length nrow(x)")
   }
   if (is.null(rownames(x))) {
@@ -86,12 +90,23 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
 }
 
 scorpiusInput <- reactive({
-  inFile <- input$trajInputFile
-
-  if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/scorpiusInput.RData", list = c(ls(), ls(envir = globalenv())))
+  if (DEBUG) cat(file = stderr(), "scorpiusInput started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusInput")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusInput")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusInput", id = "scorpiusInput", duration = NULL)
   }
-  # load(file="~/scShinyHubDebug/scorpiusInput.RData")
+  
+  inFile <- input$trajInputFile
+  
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scorpiusInput.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/scorpiusInput.RData")
   if (is.null(inFile)) {
     return(NULL)
   }
@@ -108,12 +123,23 @@ scorpiusInput <- reactive({
 })
 
 scorpiusSpace <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusSpace started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusSpace")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusSpace")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusSpace", id = "scorpiusSpace", duration = NULL)
+  }
+  
   projections <- projections()
   doCalc <- input$scorpiusCalc
   dimX <- input$dimScorpiusX
   dimY <- input$dimScorpiusY
   scInput <- scorpiusInput()
-
+  
   if (!is.null(scInput)) {
     return(scInput[, c(1, 2)])
   }
@@ -121,20 +147,31 @@ scorpiusSpace <- reactive({
     if (DEBUG) cat(file = stderr(), paste("scorpiusSpace:NULL\n"))
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/scorpiusSpace.RData", list = c(ls(), ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scorpiusSpace.RData", list = c(ls(), ls(envir = globalenv())))
   }
-  # load(file="~/scShinyHubDebug/scorpiusSpace.RData")
-
+  # load(file="~/SCHNAPPsDebug/scorpiusSpace.RData")
+  
   space <- projections[, c(dimX, dimY)]
   return(space)
 })
 
 scorpiusTrajectory <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusTrajectory started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusTrajectory")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusTrajectory")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusTrajectory", id = "scorpiusTrajectory", duration = NULL)
+  }
+  
   space <- scorpiusSpace()
   doCalc <- input$scorpiusCalc
   scInput <- scorpiusInput()
-
+  
   if (!is.null(scInput)) {
     return(scInput)
   }
@@ -142,67 +179,115 @@ scorpiusTrajectory <- reactive({
     if (DEBUG) cat(file = stderr(), paste("scorpiusTrajectory:NULL\n"))
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/scorpiusTrajectory.RData", list = c(ls(), ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scorpiusTrajectory.RData", list = c(ls(), ls(envir = globalenv())))
   }
-  # load(file="~/scShinyHubDebug/scorpiusTrajectory.RData")
+  # load(file="~/SCHNAPPsDebug/scorpiusTrajectory.RData")
   require(SCORPIUS)
   traj <- SCORPIUS::infer_trajectory(space)
-  return(traj)
+  traj$path = data.frame(traj$path)
+  traj$path$idx <- 1:nrow(traj$path)
+  traj$path <- traj$path[order(traj$time),] 
+  rownames(traj$path) = names(sort(traj$time))
+  traj$path$time = sort(traj$time)
+  traj$path = traj$path[order(traj$path$idx),]
+  traj$path = traj$path[, -3]
+  rownames(traj$path) == names(traj$time)
+  return(traj$path)
 })
 
+# traj$path[1:10,]
+# traj$path[order(traj$path$idx)[1:10],]
+
+
 scorpiusExpSel <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusExpSel started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusExpSel")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusExpSel")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusExpSel", id = "scorpiusExpSel", duration = NULL)
+  }
+  if (!is.null(getDefaultReactiveDomain())) {
+    removeNotification( id = "scorpiusExpSelWARNING")
+  }
+  
   scEx_log <- scEx_log()
   traj <- scorpiusTrajectory()
   doCalc <- input$scorpiusCalc
-
+  scorpMaxGenes <- input$scorpMaxGenes
+  scorpRepeat <- input$scorpRepeat
+  
   if (!doCalc | is.null(scEx_log) | is.null(traj)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusExpSel:NULL\n"))
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/scorpiusExpSel.RData", list = c(ls(), ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scorpiusExpSel.RData", list = c(ls(), ls(envir = globalenv())))
   }
-  # load(file="~/scShinyHubDebug/scorpiusExpSel.RData")
-
-  expression <- as.matrix(assays(scEx_log)[[1]])
-  gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
-  maxRow <- min(500, nrow(gimp))
+  # load(file="~/SCHNAPPsDebug/scorpiusExpSel.RData")
+  
+  cellsNotFound <- colnames(assays(scEx_log)[[1]])[!colnames(assays(scEx_log)[[1]]) %in% rownames(traj)]
+  expression <- as.matrix(t(assays(scEx_log)[[1]][,rownames(traj)]))
+  gimp <- gene_importances(expression[rownames(traj),], traj$time, num_permutations = scorpRepeat, num_threads = 8)
+  maxRow <- min(scorpMaxGenes, nrow(gimp))
   gene_sel <- gimp[1:maxRow, ]
-  expr_sel <- t(expression)[, gene_sel$gene]
-  return(expr_sel)
+  expr_sel <- expression[, gene_sel$gene]
+  
+  # dfTmp = data.frame(matrix(0,nrow = length(cellsNotFound), ncol = ncol(expr_sel)))
+  # rownames(dfTmp) = cellsNotFound
+  # colnames(dfTmp) = colnames(expr_sel)
+  # retVal = rbind(expr_sel,dfTmp)
+  return(list(expr_sel = expr_sel, gene_sel = gene_sel))
 })
 
 scorpiusModules <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusModules started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusModules")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusModules")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusModules", id = "scorpiusModules", duration = NULL)
+  }
+  if (!is.null(getDefaultReactiveDomain())) {
+    removeNotification( id = "scorpiusModulesWARNING")
+  }
+  
   scEx_log <- scEx_log()
   # projections = projections()
   # space <- scorpiusSpace()
   traj <- scorpiusTrajectory()
   expr_sel <- scorpiusExpSel()
-
+  
   # scorpiusModules = scorpiusModules()
   upI <- updateScorpiusInput() # needed to update input
   dimX <- input$dimScorpiusX
   dimY <- input$dimScorpiusY
   # dimCol = input$dimScorpiusCol
   doCalc <- input$scorpiusCalc
-
+  
   if (!doCalc | is.null(scEx_log)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/scorpiusModules.RData", list = c(ls(), ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scorpiusModules.RData", list = c(ls(), ls(envir = globalenv())))
   }
-  # load(file="~/scShinyHubDebug/scorpiusModules.RData")
+  # load(file="~/SCHNAPPsDebug/scorpiusModules.RData")
   # space = projections[,c(dimX, dimY)]
   # traj <- infer_trajectory(space)
   # expression = as.matrix(exprs(scEx_log))
   # gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
-
-  modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = T)
+  
+  modules <- extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
   modules$symbol <- fd[modules$feature, "symbol"]
@@ -210,29 +295,80 @@ scorpiusModules <- reactive({
   return(modules)
 })
 
+scorpiusModulesTable <- reactive({
+  if (DEBUG) cat(file = stderr(), "scorpiusModulesTable started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "scorpiusModulesTable")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "scorpiusModulesTable")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("scorpiusModulesTable", id = "scorpiusModulesTable", duration = NULL)
+  }
+  
+  scEx_log <- scEx_log()
+  # projections = projections()
+  # space <- scorpiusSpace()
+  traj <- scorpiusTrajectory()
+  expr_sel <- scorpiusExpSel()
+  modules <- scorpiusModules()
+  
+  # scorpiusModules = scorpiusModules()
+  upI <- updateScorpiusInput() # needed to update input
+  dimX <- input$dimScorpiusX
+  dimY <- input$dimScorpiusY
+  # dimCol = input$dimScorpiusCol
+  doCalc <- input$scorpiusCalc
+  
+  if (!doCalc | is.null(scEx_log)) {
+    if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scorpiusModulesTable.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/scorpiusModulesTable.RData")
+  # space = projections[,c(dimX, dimY)]
+  # traj <- infer_trajectory(space)
+  # expression = as.matrix(exprs(scEx_log))
+  # gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
+  # gene_sel <- gimp[1:50,]
+  # expr_sel <- t(expression)[,gene_sel$gene]
+  
+  gene_selDF <- as.data.frame(expr_sel$gene_sel)
+  rownames(gene_selDF) = gene_selDF[,1]
+  gene_selDF = gene_selDF[,-1]
+  
+  
+  return(cbind(modules,gene_selDF[modules$feature,]))
+})
 
 updateScorpiusInput <- reactive({
   tsneData <- projections()
-
+  
   # Can use character(0) to remove all choices
   if (is.null(tsneData)) {
     return(NULL)
   }
-
+  
   # Can also set the label and select items
   updateSelectInput(session, "dimScorpiusX",
-    choices = colnames(tsneData),
-    selected = colnames(tsneData)[1]
+                    choices = colnames(tsneData),
+                    selected = colnames(tsneData)[1]
   )
-
+  
   updateSelectInput(session, "dimScorpiusY",
-    choices = colnames(tsneData),
-    selected = colnames(tsneData)[2]
+                    choices = colnames(tsneData),
+                    selected = colnames(tsneData)[2]
   )
   updateSelectInput(session, "dimScorpiusCol",
-    choices = colnames(tsneData),
-    selected = colnames(tsneData)[2]
+                    choices = colnames(tsneData),
+                    selected = colnames(tsneData)[2]
   )
+  # updateNumericInput(session, "scorpMaxGenes",
+  #                   value = 500
+  # )
 })
 
 
@@ -240,52 +376,229 @@ updateScorpiusInput <- reactive({
 # --------------------------
 # Elpi Graph
 # --------------------------
+# TODO change to projections input
 
 elpiTreeData <- reactive({
   if (DEBUG) {
     cat(file = stderr(), "elpiTreeData\n")
   }
-
+  
   dimElpi <- input$dimElpi
   scEx <- scEx()
   projections <- projections()
   if (is.null(scEx)) {
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    base::save(file = "~/scShinyHubDebug/elpiTreeData.RData", list = c(base::ls(), base::ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    base::save(file = "~/SCHNAPPsDebug/elpiTreeData.RData", list = c(base::ls()))
   }
-
+  # cp =load(file = "~/SCHNAPPsDebug/elpiTreeData.RData")
   if (dimElpi == "elpiPCA") {
-    return(as.matrix(assays(scEx)[[1]]))
+    return(t(as.matrix(assays(scEx)[[1]])))
   }
   cat(file = stderr(), "elpiTreeData should not happen\n")
-  assays(scEx)[[1]]
+  t(assays(scEx)[[1]])
 })
 
+traj_endpoints <- reactive({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "traj_endpoints")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "traj_endpoints")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("traj_endpoints", id = "traj_endpoints", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "traj_endpoints started.\n")
+  scEx_log <- scEx_log()
+  projections <- projections()
+  TreeEPG <- elpiGraphCompute()
+  elpimode <- input$ElpiMethod
+  
+  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/traj_endpoints.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/traj_endpoints.RData")
+  Tree_Graph <- ElPiGraph.R::ConstructGraph(TreeEPG[[length(TreeEPG)]])
+  Tree_e2e <- ElPiGraph.R::GetSubGraph(Net = Tree_Graph, Structure = 'end2end', Circular = T,Nodes = 30,KeepEnds = T)
+  # get all end-points:
+  endPoints = unique(c(sapply(Tree_e2e, function(x) x[1]), sapply(Tree_e2e, function(x) x[length(x)])))
+  return(endPoints)
+})
+
+# traj_getPseudotime ----
+traj_getPseudotime <- reactive({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "traj_getPseudotime")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "traj_getPseudotime")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("traj_getPseudotime", id = "traj_getPseudotime", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "traj_getPseudotime started.\n")
+  scEx_log <- scEx_log()
+  projections <- projections()
+  TreeEPG <- elpiGraphCompute()
+  elpimode <- input$ElpiMethod
+  tree_data <- elpiTreeData()
+  tragetPath <- traj_tragetPath()
+  
+  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
+  
+  # computing a Partition structure
+  PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions)
+  
+  # projection structure
+  ProjStruct <- ElPiGraph.R::project_point_onto_graph(X = tree_data,
+                                         NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions,
+                                         Edges = TreeEPG[[length(TreeEPG)]]$Edges$Edges,
+                                         Partition = PartStruct$Partition)
+  psTime = ElPiGraph.R::getPseudotime(ProjStruct = ProjStruct, NodeSeq = names(tragetPath[[1]]))
+  
+  
+})
+
+
+## traj_elpi_modules -----
+traj_elpi_modules <- reactive({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "traj_elpi_modules")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "traj_elpi_modules")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("traj_elpi_modules", id = "traj_elpi_modules", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "traj_elpi_modules started.\n")
+  scEx_log <- scEx_log()
+  projections <- projections()
+  TreeEPG <- elpiGraphCompute()
+  elpimode <- input$ElpiMethod
+  gene_sel <- traj_elpi_gimp()
+  if (is.null(gene_sel) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/traj_elpi_modules.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/traj_elpi_modules.RData")
+  
+  
+  expr_sel <- t(assays(scEx_log)[[1]][gene_sel$gene,])
+  
+  ## Group the genes into modules and visualise the modules in a heatmap
+  # group_name should be dbCluster or other selectable option
+  modules <- SCORPIUS::extract_modules(scale_quantile(expr_sel))
+  
+})
+
+# traj_elpi_gimp -----
+traj_elpi_gimp <- reactive({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "traj_elpi_gimp")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "traj_elpi_gimp")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("traj_elpi_gimp", id = "traj_elpi_gimp", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "traj_elpi_gimp started.\n")
+  scEx_log <- scEx_log()
+  projections <- projections()
+  TreeEPG <- elpiGraphCompute()
+  elpimode <- input$ElpiMethod
+  psTime = traj_getPseudotime()
+  num_permutations <- input$elpi_num_permutations
+  ntree <- input$elpi_ntree
+  ntree_perm <- input$elpi_ntree_perm
+  nGenes <- input$elpi_nGenes
+  
+  if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/traj_elpi_gimp.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/traj_elpi_gimp.RData")
+  
+  require(SCORPIUS)
+  logCounts <- as.matrix(assays(scEx_log)[[1]][,which(!is.na(psTime$Pt))])
+  pst = psTime$Pt[which(!is.na(psTime$Pt))]
+  geneImport <- SCORPIUS::gene_importances(t(logCounts), pst, num_permutations = num_permutations, ntree = ntree,
+                                 ntree_perm = ntree_perm, mtry = ncol(logCounts) * 0.01, num_threads = detectCores()-1)
+  gene_sel <- geneImport[1:nGenes,]
+  
+})
+
+traj_tragetPath <- reactive({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "traj_tragetPath")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "traj_tragetPath")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("traj_tragetPath", id = "traj_tragetPath", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "traj_tragetPath started.\n")
+  scEx_log <- scEx_log()
+  projections <- projections()
+  TreeEPG <- elpiGraphCompute()
+  elpimode <- input$ElpiMethod
+  startNode <- input$elpiStartNode
+  endNode <- input$elpiEndNode
+  
+  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/traj_tragetPath.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/traj_tragetPath.RData")
+  
+  Tree_Graph <- ElPiGraph.R::ConstructGraph(TreeEPG[[length(TreeEPG)]])
+  Tree_e2e <- ElPiGraph.R::GetSubGraph(Net = Tree_Graph, Structure = 'end2end')
+  
+  retVal <- Tree_e2e[sapply(Tree_e2e, function(x){any(x[1] %in% c(startNode,endNode)) & any(x[length(x)] %in% c(startNode,endNode)) })]
+  
+})
 
 
 elpiGraphCompute <- reactive({
   if (DEBUG) {
     cat(file = stderr(), "elpiGraphCompute\n")
   }
-
+  
   nReps <- input$elpinReps # 1-50
   NumNodes <- input$elpiNumNodes # 10 - 100
   ProbPoint <- input$elpiProbPoint # 0.1-1.0
   method <- input$ElpiMethod
   tree_data <- elpiTreeData()
   doCalc <- input$elpiCalc
-
+  
   require(parallel)
-
+  
   if (!doCalc | is.null(tree_data)) {
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    base::save(file = "~/scShinyHubDebug/elpiCalc.RData", list = c(base::ls(), base::ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    base::save(file = "~/SCHNAPPsDebug/elpiCalc.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
-  # load("~/scShinyHubDebug/elpiCalc.RData")
+  # load("~/SCHNAPPsDebug/elpiCalc.RData")
   cep <- do.call(method, list(
     X = tree_data,
     NumNodes = NumNodes,
@@ -309,14 +622,14 @@ elpiGraphConstruct <- reactive({
   if (is.null(cep)) {
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    base::save(file = "~/scShinyHubDebug/elpiConstruct.RData", list = c(base::ls(), base::ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    base::save(file = "~/SCHNAPPsDebug/elpiConstruct.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
-  # load(file = "~/scShinyHubDebug/elpiConstruct.RData")
-  Tree_Graph <- ConstructGraph(PrintGraph = cep[[length(cep)]])
-  Tree_Brches <- GetSubGraph(Net = Tree_Graph, Structure = "branches")
-  PartStruct <- PartitionData(X = tree_data, NodePositions = cep[[length(cep)]]$NodePositions)
-
+  # load(file = "~/SCHNAPPsDebug/elpiConstruct.RData")
+  Tree_Graph <- ElPiGraph.R::ConstructGraph(PrintGraph = cep[[length(cep)]])
+  Tree_Brches <- ElPiGraph.R::GetSubGraph(Net = Tree_Graph, Structure = "branches")
+  PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = cep[[length(cep)]]$NodePositions)
+  
   list(
     Tree_Graph = Tree_Graph,
     Tree_e2e = GetSubGraph(Net = Tree_Graph, Structure = "end2end"),
@@ -337,16 +650,16 @@ elpiPointLabel <- reactive({
   if (is.null(elpiGraphConstruct)) {
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    base::save(file = "~/scShinyHubDebug/elpiPointLabel.RData", list = c(base::ls(), base::ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    base::save(file = "~/SCHNAPPsDebug/elpiPointLabel.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
-  # load(file = "~/scShinyHubDebug/elpiPointLabel.RData")
+  # load(file = "~/SCHNAPPsDebug/elpiPointLabel.RData")
   PartStruct <- elpiGraphConstruct$PartStruct
   Tree_BrBrPt <- elpiGraphConstruct$Tree_BrBrPt
-
-
+  
+  
   PointLabel <- rep("", length(PartStruct$Partition))
-
+  
   for (i in 1:length(Tree_BrBrPt)) {
     PointLabel[PartStruct$Partition %in% Tree_BrBrPt[[i]]] <- names(Tree_BrBrPt)[i]
   }
@@ -371,8 +684,8 @@ elpiPointLabel <- reactive({
 #     showNotification("loading", id="DummyFunc", duration = NULL)
 #   }
 #   if(DEBUGSAVE)
-#     save(file = "~/scShinyHubDebug/DummyReactive.RData", list = c(ls(),ls(envir = globalenv())))
-#   # load(file='~/scShinyHubDebug/DummyReactive.RData')
+#     save(file = "~/SCHNAPPsDebug/DummyReactive.RData", list = c(ls(),ls(envir = globalenv())))
+#   # load(file='~/SCHNAPPsDebug/DummyReactive.RData')
 #
 #   # actual calculation
 #   retVal = DummyFunc(gbm_log)

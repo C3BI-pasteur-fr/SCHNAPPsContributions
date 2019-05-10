@@ -14,7 +14,9 @@ output$scropius_trajectory_plot <- renderPlot({
     showNotification("scropius_trajectory_plot", id = "scropius_trajectory_plot", duration = NULL)
   }
   
+  traj <- scorpiusTrajectory()
   projections <- projections()
+  space <- scorpiusSpace()
   upI <- updateScorpiusInput() # needed to update input
   dimX <- input$dimScorpiusX
   dimY <- input$dimScorpiusY
@@ -34,13 +36,14 @@ output$scropius_trajectory_plot <- renderPlot({
     save(file = "~/scShinyHubDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/scShinyHubDebug/scropius_trajectory_plot.RData")
-  space <- projections[, c(dimX, dimY)]
+  # space <- projections[, c(dimX, dimY)]
   require(SCORPIUS)
-  traj <- SCORPIUS::infer_trajectory(space)
-  draw_trajectory_plot(space, progression_group = projections[, dimCol], path = traj$path)
+  # traj <- SCORPIUS::infer_trajectory(space)
+  colnames(traj) = c("Comp1", "Comp2", "time")
+  draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], path = as.matrix(traj[,1:2]))
 })
 
-callModule(tableSelectionServer, "scorpiusTableMod", scorpiusModules)
+callModule(tableSelectionServer, "scorpiusTableMod", scorpiusModulesTable)
 # selected clusters heatmap module
 
 scorpiusHeatmapPlotReactive <- reactive({
@@ -63,6 +66,9 @@ scorpiusHeatmapPlotReactive <- reactive({
   
   dimCol <- input$dimScorpiusCol
   doCalc <- input$scorpiusCalc
+  pixelratio <- session$clientData$pixelratio
+  width <- session$clientData$output_plot_width
+  height <- session$clientData$output_plot_height
   
   
   if (!doCalc | is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(traj)) {
@@ -74,10 +80,7 @@ scorpiusHeatmapPlotReactive <- reactive({
   }
   # load(file="~/scShinyHubDebug/scorpiusHeatmapPlot.RData")
   
-  pixelratio <- session$clientData$pixelratio
   if (is.null(pixelratio)) pixelratio <- 1
-  width <- session$clientData$output_plot_width
-  height <- session$clientData$output_plot_height
   if (is.null(width)) {
     width <- 96 * 7
   } # 7x7 inch output
@@ -89,12 +92,12 @@ scorpiusHeatmapPlotReactive <- reactive({
   cat(file = stderr(), paste("saving to: ", outfile, "\n"))
   
   # modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = F)
-  retVal <- drawTrajectoryHeatmap(expr_sel, traj$time, projections[, dimCol], modules,
+  retVal <- drawTrajectoryHeatmap(expr_sel$expr_sel, traj$time, projections[rownames(expr_sel$expr_sel), dimCol], modules,
                                   filename = normalizePath(outfile, mustWork = FALSE)
   )
   
   exportTestValues(scorpiusHeatmapPlotReactive = {retVal})  
-  return(retval)
+  return(retVal)
   
 })
 
@@ -105,35 +108,67 @@ callModule(
 )
 
 output$downLoadTraj <- downloadHandler(
-  if (DEBUG) cat(file = stderr(), "downLoadTraj started.\n")
-  start.time <- base::Sys.time()
-  on.exit({
-    printTimeEnd(start.time, "downLoadTraj")
-    if (!is.null(getDefaultReactiveDomain()))
-      removeNotification(id = "downLoadTraj")
-  })
-  if (!is.null(getDefaultReactiveDomain())) {
-    showNotification("downLoadTraj", id = "downLoadTraj", duration = NULL)
-  }
   
   filename = paste0("scorpiusTraj.", Sys.Date(), ".csv"),
   content = function(file) {
     if (DEBUG) cat(file = stderr(), paste("downLoadTraj: \n"))
-    scTRAJ <- scorpiusTrajectory()
-    if (is.null(scTRAJ)) {
+    traj <- scorpiusTrajectory()
+    if (is.null(traj)) {
       return(NULL)
     }
-    write.csv(scTRAJ, file)
+    if (DEBUGSAVE) {
+      save(file = "~/scShinyHubDebug/downLoadTraj.RData", list = c(ls(), ls(envir = globalenv())))
+    }
+    # load(file="~/scShinyHubDebug/downLoadTraj.RData")
+    write.csv(traj, file)
   }
-  exportTestValues(downLoadTraj = {scTRAJ})  
-  return()
-  
 )
 
 
 # --------------------------
 # Elpi Graph
 # --------------------------
+
+output$elpi_heatmap <- renderPlot({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "traj_getPseudotime")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "traj_getPseudotime")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("traj_getPseudotime", id = "traj_getPseudotime", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "traj_getPseudotime started.\n")
+  scEx_log <- scEx_log()
+  projections <- projections()
+  TreeEPG <- elpiGraphCompute()
+  elpimode <- input$ElpiMethod
+  tree_data <- elpiTreeData()
+  tragetPath <- traj_tragetPath()
+  gene_sel <- traj_elpi_gimp() 
+  modules <-  traj_elpi_modules()
+  psTime = traj_getPseudotime()
+  
+  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
+  
+  ## Select most important genes (set ntree to at least 10000!)
+  # gene_sel <- geneImport[1:50,]
+  
+  expr_sel <- as.matrix(t(assays(scEx_log)[[1]][gene_sel$gene,which(!is.na(psTime$Pt))]))
+  
+  pst = psTime$Pt[which(!is.na(psTime$Pt))]
+  
+  
+  p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] , modules=modules)
+  
+})
 
 output$elpi_plot <- renderPlot({
   if (DEBUG) cat(file = stderr(), "elpi_plot started.\n")
@@ -160,14 +195,31 @@ output$elpi_plot <- renderPlot({
   # load(file = "~/scShinyHubDebug/elpi_plot.RData")
   
   require(ggrepel)
-  p <- PlotPG(X = tree_data, TargetPG = cep[[length(cep)]], GroupsLab = PointLabel, p.alpha = 0.9)
-  p[[1]] <- p[[1]] + geom_label_repel(
-    data = plyr::ddply(p[[1]]$data, ~Group, summarise, meanA = mean(PCA), meanB = mean(PCB)),
-    aes(x = meanA, y = meanB, label = Group),
-    vjust = 1
-  )
+  
+  NodeLabs <- 1:nrow(cep[[length(cep)]]$NodePositions)
+  NodeLabs[degree(ConstructGraph(cep[[length(cep)]])) != 1] <- NA
+  
+  p <- PlotPG(X = tree_data, TargetPG = cep[[length(cep)]],
+              NodeLabels = NodeLabs,
+              LabMult = 5, PointSize = NA, p.alpha = .1)
+  
+  
+  # p <- PlotPG(X = tree_data, TargetPG = cep[[length(cep)]], GroupsLab = PointLabel, p.alpha = 0.9)
+  # p[[1]] <- p[[1]] + geom_label_repel(
+  #   data = plyr::ddply(p[[1]]$data, ~Group, summarise, meanA = mean(PCA), meanB = mean(PCB)),
+  #   aes(x = meanA, y = meanB, label = Group),
+  #   vjust = 1
+  # )
   p
 })
+
+output$elpi_moduleHeatmap <- renderPlot({
+  
+  
+  draw_trajectory_heatmap(expr_sel, pst, group_name, modules)
+  
+})
+
 
 output$elpi_histo <- renderPlot({
   if (DEBUG) cat(file = stderr(), "elpi_histo started.\n")
@@ -192,3 +244,4 @@ output$elpi_histo <- renderPlot({
   
   barplot(table(PointLabel), las = 2, ylab = "Number of points")
 })
+

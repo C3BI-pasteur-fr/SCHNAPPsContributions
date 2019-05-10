@@ -1,3 +1,7 @@
+require(shiny)
+require(shinydashboard)
+require(shinyBS)
+require(shinycssloaders)
 # menu list
 # defines the main entry
 menuList <- list(
@@ -21,7 +25,7 @@ tabList <- list(
       )),
       fluidRow(
         column(
-          4,
+          3,
           selectInput(
             "dimScorpiusX",
             label = "Component 1",
@@ -30,7 +34,7 @@ tabList <- list(
           )
         ),
         column(
-          4,
+          3,
           selectInput(
             "dimScorpiusY",
             label = "Component 2",
@@ -39,14 +43,34 @@ tabList <- list(
           )
         ),
         column(
-          4,
+          3,
           selectInput(
             "dimScorpiusCol",
             label = "Color by",
             choices = c("sample", "tsne1", "tsne2", "tsne3"),
             selected = "sample"
           )
+        ),
+        column(
+          3,
+          numericInput(
+            "scorpMaxGenes",
+            label = "max number of Genes",
+            min = 200, max = 20000, step = 10,
+            value = 500
+          )
         )
+      ),
+      fluidRow(      
+        column(
+        3,
+        numericInput(
+          "scorpRepeat",
+          label = "number of permutations for random forrest",
+          min = 1, max = 100, step = 1,
+          value = 3
+        )
+      )
       ),
       fluidRow(column(
         12,
@@ -118,7 +142,7 @@ tabList <- list(
         numericInput(
           inputId = "elpiNumNodes",
           label = "Number of nodes",
-          value = 60,
+          value = 20,
           min = 10, max = 100, step = 1
         )
       ),
@@ -144,6 +168,43 @@ tabList <- list(
     fluidRow(column(
       12,
       plotOutput("elpi_plot", height = "672px") # %>% withSpinner()
+    )),
+    fluidRow(column(
+      4,
+      numericInput(
+        inputId = "elpiStartNode",
+        label = "start node of trajectory analysis",
+        value = 1
+      ),
+      numericInput(
+        inputId = "elpiEndNode",
+        label = "end node of trajectory analysis",
+        value = 2
+      ),
+      numericInput(
+        inputId = "elpi_num_permutations",
+        label = "elpi_num_permutations",
+        value = 3
+      ),
+      numericInput(
+        inputId = "elpi_ntree",
+        label = "elpi_ntree",
+        value = 10000
+      ),
+      numericInput(
+        inputId = "elpi_ntree_perm",
+        label = "elpi_ntree_perm",
+        value = 1000
+      ),
+      numericInput(
+        inputId = "elpi_nGenes",
+        label = "number of output genes",
+        value = 50
+      )
+    )),
+    fluidRow(column(
+      12,
+      plotOutput("elpi_heatmap", height = "672px")
     )),
     # tags$h3("Heatmap "),
     fluidRow(column(

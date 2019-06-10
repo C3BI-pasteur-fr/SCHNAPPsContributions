@@ -57,10 +57,10 @@ dca_impute <- reactive({
     }
     return(NULL)
   }
-  if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/dca_impute.RData", list = c(ls(), ls(envir = globalenv())))
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/dca_impute.RData", list = c(ls(), ls(envir = globalenv())))
   }
-  # load(file="~/scShinyHubDebug/dca_impute.RData")
+  # load(file="~/SCHNAPPsDebug/dca_impute.RData")
 
   tfile <- tempfile(pattern = "dcaInput", tmpdir = tempdir(), fileext = ".csv")
   tdir <- paste0(tempdir(), "/dcaresults")
@@ -82,11 +82,12 @@ dca_impute <- reactive({
     cat(file = stderr(), "dca_impute:Done\n")
   }
 
-  scEx_bcnorm <- SingleCellExperiment(assay = list(sc_matrix = as(A,"dgTMatrix")),
+  scEx_bcnorm <- SingleCellExperiment(assay = list(logcounts = as(sc_matrix,"dgTMatrix")),
                                       colData = colData(scEx),
                                       rowData = rowData(scEx))
   
   x <- uniqTsparse(assays(scEx_bcnorm)[[1]])
+  scalingFactor = 1000
   slot(x, "x") <- log(1 + slot(x, "x"), base = 2) * scalingFactor
   assays(scEx_bcnorm)[[1]] <- x
   return(scEx_bcnorm)

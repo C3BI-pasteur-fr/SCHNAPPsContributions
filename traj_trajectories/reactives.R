@@ -255,7 +255,6 @@ scorpiusModules <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     removeNotification( id = "scorpiusModulesWARNING")
   }
-
   scEx_log <- scEx_log()
   # projections = projections()
   # space <- scorpiusSpace()
@@ -334,7 +333,6 @@ scorpiusModulesTable <- reactive({
   gene_selDF <- as.data.frame(expr_sel$gene_sel)
   rownames(gene_selDF) = gene_selDF[,1]
   gene_selDF = gene_selDF[,-1]
-
   return(cbind(modules,gene_selDF[modules$feature,]))
 })
 

@@ -108,7 +108,6 @@ callModule(
 )
 
 output$downLoadTraj <- downloadHandler(
-  
   filename = paste0("scorpiusTraj.", Sys.Date(), ".csv"),
   content = function(file) {
     if (DEBUG) cat(file = stderr(), paste("downLoadTraj: \n"))

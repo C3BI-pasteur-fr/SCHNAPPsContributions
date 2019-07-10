@@ -133,7 +133,6 @@ scorpiusSpace <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("scorpiusSpace", id = "scorpiusSpace", duration = NULL)
   }
-  
   projections <- projections()
   doCalc <- input$scorpiusCalc
   dimX <- input$dimScorpiusX
@@ -229,14 +228,12 @@ scorpiusExpSel <- reactive({
     save(file = "~/SCHNAPPsDebug/scorpiusExpSel.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusExpSel.RData")
-  
   cellsNotFound <- colnames(assays(scEx_log)[[1]])[!colnames(assays(scEx_log)[[1]]) %in% rownames(traj)]
   expression <- as.matrix(t(assays(scEx_log)[[1]][,rownames(traj)]))
   gimp <- gene_importances(expression[rownames(traj),], traj$time, num_permutations = scorpRepeat, num_threads = 8)
   maxRow <- min(scorpMaxGenes, nrow(gimp))
   gene_sel <- gimp[1:maxRow, ]
   expr_sel <- expression[, gene_sel$gene]
-  
   # dfTmp = data.frame(matrix(0,nrow = length(cellsNotFound), ncol = ncol(expr_sel)))
   # rownames(dfTmp) = cellsNotFound
   # colnames(dfTmp) = colnames(expr_sel)
@@ -258,7 +255,7 @@ scorpiusModules <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     removeNotification( id = "scorpiusModulesWARNING")
   }
-  
+
   scEx_log <- scEx_log()
   # projections = projections()
   # space <- scorpiusSpace()
@@ -286,7 +283,6 @@ scorpiusModules <- reactive({
   # gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
-  
   modules <- extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
@@ -306,7 +302,6 @@ scorpiusModulesTable <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("scorpiusModulesTable", id = "scorpiusModulesTable", duration = NULL)
   }
-  
   scEx_log <- scEx_log()
   # projections = projections()
   # space <- scorpiusSpace()
@@ -339,8 +334,7 @@ scorpiusModulesTable <- reactive({
   gene_selDF <- as.data.frame(expr_sel$gene_sel)
   rownames(gene_selDF) = gene_selDF[,1]
   gene_selDF = gene_selDF[,-1]
-  
-  
+
   return(cbind(modules,gene_selDF[modules$feature,]))
 })
 

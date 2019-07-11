@@ -282,6 +282,7 @@ scorpiusModules <- reactive({
   # gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
+
   modules <- extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
@@ -415,6 +416,7 @@ traj_endpoints <- reactive({
     save(file = "~/SCHNAPPsDebug/traj_endpoints.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/traj_endpoints.RData")
+  set.seed(1)
   Tree_Graph <- ElPiGraph.R::ConstructGraph(TreeEPG[[length(TreeEPG)]])
   Tree_e2e <- ElPiGraph.R::GetSubGraph(Net = Tree_Graph, Structure = 'end2end', Circular = T,Nodes = 30,KeepEnds = T)
   # get all end-points:
@@ -497,7 +499,7 @@ traj_getPseudotime <- reactive({
     save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
-  
+  set.seed(1)
   # computing a Partition structure
   PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions)
   
@@ -529,7 +531,8 @@ traj_elpi_modules <- reactive({
   TreeEPG <- elpiGraphCompute()
   elpimode <- input$ElpiMethod
   gene_sel <- traj_elpi_gimp()
-  if (is.null(gene_sel) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle" || nrow(gene_sel)<1) {
+  
+  if (is.null(gene_sel) || is.null(gene_sel) || elpimode=="computeElasticPrincipalCircle" || nrow(gene_sel)<1) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -537,7 +540,7 @@ traj_elpi_modules <- reactive({
   }
   # load(file="~/SCHNAPPsDebug/traj_elpi_modules.RData")
   
-
+  set.seed(1)
   expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,]))
   
   ## Group the genes into modules and visualise the modules in a heatmap
@@ -576,6 +579,7 @@ traj_elpi_gimp <- reactive({
   }
   # load(file="~/SCHNAPPsDebug/traj_elpi_gimp.RData")
   
+  set.seed(1)
   require(SCORPIUS)
   logCounts <- as.matrix(assays(scEx_log)[[1]][,which(!is.na(psTime$Pt))])
   pst = psTime$Pt[which(!is.na(psTime$Pt))]
@@ -604,7 +608,9 @@ observe({
   
   startNode <- input$elpiStartNode
   endNode <- input$elpiEndNode
+  elpimode <- input$ElpiMethod
   psTime = traj_getPseudotime()
+  scEx_log <- scEx_log()
   isolate({
     prjs <- sessionProjections$prjs
   })
@@ -616,14 +622,14 @@ observe({
     save(file = "~/SCHNAPPsDebug/observeProj.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/observeProj.RData")
+  cn = paste0("traj_", startNode, "_", endNode)
   if (cn %in% colnames(prjs)) {
     return(NULL)
   }
-  cn = paste0("traj_", startNode, "_", endNode)
-  
+  # browser()
   if (ncol(prjs) > 0) {
     # make sure we are working with the correct cells. This might change when cells were removed.
-    prjs = prjs[colnames(scEx),]
+    prjs = prjs[colnames(scEx_log),,drop=FALSE]
     # didn't find a way to easily overwrite columns
     
       if (cn %in% colnames(prjs)) {
@@ -634,9 +640,10 @@ observe({
       }
      sessionProjections$prjs <- prjs
   } else {
+    browser()
     prjs <- data.frame(cn = psTime$Pt )
-    rownames(prjs) = colnames(scEx)
-    colnames(prjs) = cn
+    rownames(prjs) = colnames(scEx_log)
+    colnames(prjs)[ncol(prjs)] = cn
     sessionProjections$prjs = prjs
   }
 })
@@ -666,7 +673,7 @@ traj_tragetPath <- reactive({
     save(file = "~/SCHNAPPsDebug/traj_tragetPath.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/traj_tragetPath.RData")
-  
+  set.seed(1)
   Tree_Graph <- ElPiGraph.R::ConstructGraph(TreeEPG[[length(TreeEPG)]])
   Tree_e2e <- ElPiGraph.R::GetSubGraph(Net = Tree_Graph, Structure = 'end2end')
   
@@ -696,6 +703,7 @@ elpiGraphCompute <- reactive({
     base::save(file = "~/SCHNAPPsDebug/elpiCalc.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
   # load("~/SCHNAPPsDebug/elpiCalc.RData")
+  set.seed(1)
   cep <- do.call(method, list(
     X = tree_data,
     NumNodes = NumNodes,
@@ -723,6 +731,8 @@ elpiGraphConstruct <- reactive({
     base::save(file = "~/SCHNAPPsDebug/elpiConstruct.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
   # load(file = "~/SCHNAPPsDebug/elpiConstruct.RData")
+  
+  set.seed(1)
   Tree_Graph <- ElPiGraph.R::ConstructGraph(PrintGraph = cep[[length(cep)]])
   Tree_Brches <- ElPiGraph.R::GetSubGraph(Net = Tree_Graph, Structure = "branches")
   PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = cep[[length(cep)]]$NodePositions)

@@ -116,6 +116,35 @@ tabList <- list(
     )),
     fluidRow(
       column(
+        3,
+        selectInput(
+          "dimElpiX",
+          label = "Component 1",
+          choices = c("tsne1", "tsne2", "tsne3"),
+          selected = "tsne1"
+        )
+      ),
+      column(
+        3,
+        selectInput(
+          "dimElpiY",
+          label = "Component 2",
+          choices = c("tsne1", "tsne2", "tsne3"),
+          selected = "tsne2"
+        )
+      ),
+      column(
+        3,
+        selectInput(
+          "dimElpiCol",
+          label = "Color by",
+          choices = c("sample", "tsne1", "tsne2", "tsne3"),
+          selected = "sample"
+        )
+      )
+    ),
+    fluidRow(
+      column(
         4,
         selectInput(
           "dimElpi",
@@ -171,15 +200,17 @@ tabList <- list(
     )),
     fluidRow(column(
       4,
-      numericInput(
+      selectInput(
         inputId = "elpiStartNode",
         label = "start node of trajectory analysis",
-        value = 1
+        choices = c(1,2),
+        selected = 1
       ),
-      numericInput(
+      selectInput(
         inputId = "elpiEndNode",
         label = "end node of trajectory analysis",
-        value = 2
+        choices = c(1,2),
+        selected = 2
       ),
       numericInput(
         inputId = "elpi_num_permutations",
@@ -206,6 +237,7 @@ tabList <- list(
       12,
       plotOutput("elpi_heatmap", height = "672px")
     )),
+    br(),
     # tags$h3("Heatmap "),
     fluidRow(column(
       12,

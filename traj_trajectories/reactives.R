@@ -422,6 +422,55 @@ traj_endpoints <- reactive({
   return(endPoints)
 })
 
+observe({
+  tsneData <- projections()
+  
+  # Can use character(0) to remove all choices
+  if (is.null(tsneData)) {
+    return(NULL)
+  }
+  
+  # Can also set the label and select items
+  updateSelectInput(session, "dimElpiX",
+                    choices = colnames(tsneData),
+                    selected = colnames(tsneData)[1]
+  )
+  
+  updateSelectInput(session, "dimElpiY",
+                    choices = colnames(tsneData),
+                    selected = colnames(tsneData)[2]
+  )
+  updateSelectInput(session, "dimElpiCol",
+                    choices = colnames(tsneData),
+                    selected = colnames(tsneData)[2]
+  )
+  # updateNumericInput(session, "scorpMaxGenes",
+  #                   value = 500
+  # )
+})
+
+# updateElpiInput ----
+# update the start/end positions with the possible end point values
+ observe({
+  endpoints <- traj_endpoints()
+  
+  # Can use character(0) to remove all choices
+  if (is.null(endpoints)) {
+    return(NULL)
+  }
+  
+  # Can also set the label and select items
+  updateSelectInput(session, inputId = "elpiStartNode",
+                    choices = endpoints,
+                    selected = endpoints[1]
+  )
+  
+  updateSelectInput(session, inputId = "elpiEndNode",
+                    choices = endpoints,
+                    selected = endpoints[length(endpoints)]
+  )
+})
+
 # traj_getPseudotime ----
 traj_getPseudotime <- reactive({
   start.time <- base::Sys.time()
@@ -440,8 +489,8 @@ traj_getPseudotime <- reactive({
   elpimode <- input$ElpiMethod
   tree_data <- elpiTreeData()
   tragetPath <- traj_tragetPath()
-  
-  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
+
+  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle" || length(tragetPath) == 0) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -454,9 +503,9 @@ traj_getPseudotime <- reactive({
   
   # projection structure
   ProjStruct <- ElPiGraph.R::project_point_onto_graph(X = tree_data,
-                                         NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions,
-                                         Edges = TreeEPG[[length(TreeEPG)]]$Edges$Edges,
-                                         Partition = PartStruct$Partition)
+                                                      NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions,
+                                                      Edges = TreeEPG[[length(TreeEPG)]]$Edges$Edges,
+                                                      Partition = PartStruct$Partition)
   psTime = ElPiGraph.R::getPseudotime(ProjStruct = ProjStruct, NodeSeq = names(tragetPath[[1]]))
   
   
@@ -480,7 +529,7 @@ traj_elpi_modules <- reactive({
   TreeEPG <- elpiGraphCompute()
   elpimode <- input$ElpiMethod
   gene_sel <- traj_elpi_gimp()
-  if (is.null(gene_sel) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+  if (is.null(gene_sel) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle" || nrow(gene_sel)<1) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -488,8 +537,8 @@ traj_elpi_modules <- reactive({
   }
   # load(file="~/SCHNAPPsDebug/traj_elpi_modules.RData")
   
-  
-  expr_sel <- t(assays(scEx_log)[[1]][gene_sel$gene,])
+
+  expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,]))
   
   ## Group the genes into modules and visualise the modules in a heatmap
   # group_name should be dbCluster or other selectable option
@@ -518,8 +567,8 @@ traj_elpi_gimp <- reactive({
   ntree <- input$elpi_ntree
   ntree_perm <- input$elpi_ntree_perm
   nGenes <- input$elpi_nGenes
-  
-  if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+
+   if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -531,9 +580,65 @@ traj_elpi_gimp <- reactive({
   logCounts <- as.matrix(assays(scEx_log)[[1]][,which(!is.na(psTime$Pt))])
   pst = psTime$Pt[which(!is.na(psTime$Pt))]
   geneImport <- SCORPIUS::gene_importances(t(logCounts), pst, num_permutations = num_permutations, ntree = ntree,
-                                 ntree_perm = ntree_perm, mtry = ncol(logCounts) * 0.01, num_threads = detectCores()-1)
+                                           ntree_perm = ntree_perm, mtry = ncol(logCounts) * 0.01, num_threads = detectCores()-1)
   gene_sel <- geneImport[1:nGenes,]
   
+  
+  
+  return(gene_sel)
+})
+
+# observeProj ----
+# update projections
+observe({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "observeProj")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "observeProj")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("observeProj", id = "observeProj", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "observeProj started.\n")
+  
+  startNode <- input$elpiStartNode
+  endNode <- input$elpiEndNode
+  psTime = traj_getPseudotime()
+  isolate({
+    prjs <- sessionProjections$prjs
+  })
+  
+  if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/observeProj.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/observeProj.RData")
+  if (cn %in% colnames(prjs)) {
+    return(NULL)
+  }
+  cn = paste0("traj_", startNode, "_", endNode)
+  
+  if (ncol(prjs) > 0) {
+    # make sure we are working with the correct cells. This might change when cells were removed.
+    prjs = prjs[colnames(scEx),]
+    # didn't find a way to easily overwrite columns
+    
+      if (cn %in% colnames(prjs)) {
+        prjs[, cn] <- psTime$Pt
+      } else {
+        prjs <- base::cbind(prjs, psTime$Pt, deparse.level = 0)
+        colnames(prjs)[ncol(prjs)] <- cn
+      }
+     sessionProjections$prjs <- prjs
+  } else {
+    prjs <- data.frame(cn = psTime$Pt )
+    rownames(prjs) = colnames(scEx)
+    colnames(prjs) = cn
+    sessionProjections$prjs = prjs
+  }
 })
 
 traj_tragetPath <- reactive({

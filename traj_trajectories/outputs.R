@@ -149,7 +149,7 @@ output$elpi_heatmap <- renderPlot({
   modules <-  traj_elpi_modules()
   psTime = traj_getPseudotime()
   
-  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
+  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle" || is.null(psTime)) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -160,12 +160,13 @@ output$elpi_heatmap <- renderPlot({
   ## Select most important genes (set ntree to at least 10000!)
   # gene_sel <- geneImport[1:50,]
   
-  expr_sel <- as.matrix(t(assays(scEx_log)[[1]][gene_sel$gene,which(!is.na(psTime$Pt))]))
+  expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,which(!is.na(psTime$Pt))]))
   
   pst = psTime$Pt[which(!is.na(psTime$Pt))]
   
   
-  p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] , modules=modules)
+  p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
+                                         modules=modules, show_labels_row = TRUE)
   
 })
 

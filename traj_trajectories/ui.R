@@ -141,6 +141,15 @@ tabList <- list(
           choices = c("sample", "tsne1", "tsne2", "tsne3"),
           selected = "sample"
         )
+      ),
+      column(
+        4,
+        numericInput(
+          inputId = "elpiSeed",
+          label = "Seed",
+          value = 9,
+          min = 1, max = 1000, step = 1
+        )
       )
     ),
     fluidRow(
@@ -149,7 +158,7 @@ tabList <- list(
         selectInput(
           "dimElpi",
           label = "Dimensions to use",
-          choices = c("elpiPCA"),
+          choices = c("elpiPCA", "components"),
           selected = "elpiPCA"
         )
       ),

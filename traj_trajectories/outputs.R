@@ -17,7 +17,7 @@ output$scropius_trajectory_plot <- renderPlot({
   traj <- scorpiusTrajectory()
   projections <- projections()
   space <- scorpiusSpace()
-  upI <- updateScorpiusInput() # needed to update input
+  # upI <- updateScorpiusInput() # needed to update input
   dimX <- input$dimScorpiusX
   dimY <- input$dimScorpiusY
   dimCol <- input$dimScorpiusCol
@@ -33,9 +33,9 @@ output$scropius_trajectory_plot <- renderPlot({
   }
   
   if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
   }
-  # load(file="~/scShinyHubDebug/scropius_trajectory_plot.RData")
+  # load(file="~/SCHNAPPsDebug/scropius_trajectory_plot.RData")
   # space <- projections[, c(dimX, dimY)]
   require(SCORPIUS)
   # traj <- SCORPIUS::infer_trajectory(space)
@@ -58,7 +58,7 @@ scorpiusHeatmapPlotReactive <- reactive({
     showNotification("scorpiusHeatmapPlotReactive", id = "scorpiusHeatmapPlotReactive", duration = NULL)
   }
   
-  upI <- updateScorpiusInput() # needed to update input
+  # upI <- updateScorpiusInput() # needed to update input
   projections <- projections()
   traj <- scorpiusTrajectory()
   expr_sel <- scorpiusExpSel()
@@ -76,9 +76,9 @@ scorpiusHeatmapPlotReactive <- reactive({
     return(NULL)
   }
   if (DEBUGSAVE) {
-    save(file = "~/scShinyHubDebug/scorpiusHeatmapPlot.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scorpiusHeatmapPlot.RData", list = c(ls(), ls(envir = globalenv())))
   }
-  # load(file="~/scShinyHubDebug/scorpiusHeatmapPlot.RData")
+  # load(file="~/SCHNAPPsDebug/scorpiusHeatmapPlot.RData")
   
   if (is.null(pixelratio)) pixelratio <- 1
   if (is.null(width)) {
@@ -116,9 +116,9 @@ output$downLoadTraj <- downloadHandler(
       return(NULL)
     }
     if (DEBUGSAVE) {
-      save(file = "~/scShinyHubDebug/downLoadTraj.RData", list = c(ls(), ls(envir = globalenv())))
+      save(file = "~/SCHNAPPsDebug/downLoadTraj.RData", list = c(ls(), ls(envir = globalenv())))
     }
-    # load(file="~/scShinyHubDebug/downLoadTraj.RData")
+    # load(file="~/SCHNAPPsDebug/downLoadTraj.RData")
     write.csv(traj, file)
   }
 )
@@ -190,9 +190,9 @@ output$elpi_plot <- renderPlot({
     return(NULL)
   }
   if (DEBUGSAVE) {
-    base::save(file = "~/scShinyHubDebug/elpi_plot.RData", list = c(base::ls(), base::ls(envir = globalenv())))
+    base::save(file = "~/SCHNAPPsDebug/elpi_plot.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
-  # load(file = "~/scShinyHubDebug/elpi_plot.RData")
+  # load(file = "~/SCHNAPPsDebug/elpi_plot.RData")
   
   require(ggrepel)
   
@@ -238,9 +238,9 @@ output$elpi_histo <- renderPlot({
     return(NULL)
   }
   if (DEBUGSAVE) {
-    base::save(file = "~/scShinyHubDebug/elpi_histo.RData", list = c(base::ls(), base::ls(envir = globalenv())))
+    base::save(file = "~/SCHNAPPsDebug/elpi_histo.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
-  # load("~/scShinyHubDebug/elpi_histo.RData")
+  # load("~/SCHNAPPsDebug/elpi_histo.RData")
   
   barplot(table(PointLabel), las = 2, ylab = "Number of points")
 })

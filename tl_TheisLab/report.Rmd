@@ -34,7 +34,6 @@ require(sm)
 require(RColorBrewer)
 require(mclust)
 require(reshape)
-require(cellrangerRkit)
 # require(SCORPIUS)
 require(ggplot2)
 require(knitr)
@@ -59,7 +58,7 @@ if (exists("params")) {
     if (DEBUG) cat(file = stderr(), paste("loading: ", fp, "\n"))
     source(fp, local = TRUE)
   }
-  load("~/scShinyHubDebug/tempReport.RData")
+  # load("~/scShinyHubDebug/tempReport.RData")
   params = myparams
   LOCALEXECUTION = TRUE # to know that we are debugging.
 }

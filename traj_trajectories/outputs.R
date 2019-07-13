@@ -32,7 +32,7 @@ output$scropius_trajectory_plot <- renderPlot({
     return(p1)
   }
   
-  if (DEBUGSAVE) {
+  if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/scropius_trajectory_plot.RData")
@@ -75,7 +75,7 @@ scorpiusHeatmapPlotReactive <- reactive({
     if (DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
     return(NULL)
   }
-  if (DEBUGSAVE) {
+  if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scorpiusHeatmapPlot.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusHeatmapPlot.RData")
@@ -115,7 +115,7 @@ output$downLoadTraj <- downloadHandler(
     if (is.null(traj)) {
       return(NULL)
     }
-    if (DEBUGSAVE) {
+    if (.schnappsEnv$DEBUGSAVE) {
       save(file = "~/SCHNAPPsDebug/downLoadTraj.RData", list = c(ls(), ls(envir = globalenv())))
     }
     # load(file="~/SCHNAPPsDebug/downLoadTraj.RData")
@@ -128,47 +128,112 @@ output$downLoadTraj <- downloadHandler(
 # Elpi Graph
 # --------------------------
 
-output$elpi_heatmap <- renderPlot({
+
+elpiHeatmapPlotReactive <- reactive({
+  if (DEBUG) cat(file = stderr(), "elpiHeatmapPlotReactive started.\n")
   start.time <- base::Sys.time()
   on.exit({
-    printTimeEnd(start.time, "traj_getPseudotime")
+    printTimeEnd(start.time, "elpiHeatmapPlotReactive")
     if (!is.null(getDefaultReactiveDomain()))
-      removeNotification(id = "traj_getPseudotime")
+      removeNotification(id = "elpiHeatmapPlotReactive")
   })
   if (!is.null(getDefaultReactiveDomain())) {
-    showNotification("traj_getPseudotime", id = "traj_getPseudotime", duration = NULL)
+    showNotification("elpiHeatmapPlotReactive", id = "elpiHeatmapPlotReactive", duration = NULL)
   }
-  if (DEBUG) cat(file = stderr(), "traj_getPseudotime started.\n")
-  scEx_log <- scEx_log()
-  projections <- projections()
-  TreeEPG <- elpiGraphCompute()
-  elpimode <- input$ElpiMethod
-  tree_data <- elpiTreeData()
-  tragetPath <- traj_tragetPath()
-  gene_sel <- traj_elpi_gimp() 
-  modules <-  traj_elpi_modules()
-  psTime = traj_getPseudotime()
   
-  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle" || is.null(psTime)) {
+  # upI <- updateScorpiusInput() # needed to update input
+  projections <- projections()
+  psTime = traj_getPseudotime()
+  expr_sel <- traj_elpi_gimp()
+  modules <- traj_elpi_modules()
+  
+  dimCol <- input$dimElpiCol
+  doCalc <- input$elpiCalc
+  pixelratio <- session$clientData$pixelratio
+  width <- session$clientData$output_plot_width
+  height <- session$clientData$output_plot_height
+  
+  
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/elpiHeatmapPlotReactive.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/elpiHeatmapPlotReactive.RData")
+
+    if (!doCalc | is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(psTime)) {
+    if (.schnappsEnv$DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
     return(NULL)
   }
-  if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
+  
+  if (is.null(pixelratio)) pixelratio <- 1
+  if (is.null(width)) {
+    width <- 96 * 7
+  } # 7x7 inch output
+  if (is.null(height)) {
+    height <- 96 * 7
   }
-  # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
   
-  ## Select most important genes (set ntree to at least 10000!)
-  # gene_sel <- geneImport[1:50,]
-  
-  expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,which(!is.na(psTime$Pt))]))
+  outfile <- paste0(tempdir(), "/heatmapScorpius", base::sample(1:10000, 1), ".png")
+  cat(file = stderr(), paste("saving to: ", outfile, "\n"))
   
   pst = psTime$Pt[which(!is.na(psTime$Pt))]
+  # modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = F)
+  retVal <- drawTrajectoryHeatmap(expr_sel$expr_sel, time = pst,  projections[rownames(expr_sel$expr_sel), dimCol], modules,
+                                  filename = normalizePath(outfile, mustWork = FALSE)
+  )
   
-  
-  p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
-                                         modules=modules, show_labels_row = TRUE)
+  exportTestValues(scorpiusHeatmapPlotReactive = {retVal})  
+  return(retVal)
   
 })
+
+callModule(
+  pHeatMapModule,
+  "elpiHeatmapPlotModule",
+  elpiHeatmapPlotReactive
+)
+
+# 
+# output$elpi_heatmap <- renderPlot({
+#   start.time <- base::Sys.time()
+#   on.exit({
+#     printTimeEnd(start.time, "traj_getPseudotime")
+#     if (!is.null(getDefaultReactiveDomain()))
+#       removeNotification(id = "traj_getPseudotime")
+#   })
+#   if (!is.null(getDefaultReactiveDomain())) {
+#     showNotification("traj_getPseudotime", id = "traj_getPseudotime", duration = NULL)
+#   }
+#   if (.schnappsEnv$DEBUG) cat(file = stderr(), "traj_getPseudotime started.\n")
+#   scEx_log <- scEx_log()
+#   projections <- projections()
+#   TreeEPG <- elpiGraphCompute()
+#   elpimode <- input$ElpiMethod
+#   tree_data <- elpiTreeData()
+#   tragetPath <- traj_tragetPath()
+#   gene_sel <- traj_elpi_gimp() 
+#   modules <-  traj_elpi_modules()
+#   psTime = traj_getPseudotime()
+#   
+#   if (is.null(gene_sel) || is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle" || is.null(psTime)) {
+#     return(NULL)
+#   }
+#   if (.schnappsEnv$DEBUGSAVE) {
+#     save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
+#   }
+#   # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
+#   
+#   ## Select most important genes (set ntree to at least 10000!)
+#   # gene_sel <- geneImport[1:50,]
+#   gene_sel = gene_sel$gene_sel
+#   expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,which(!is.na(psTime$Pt))]))
+#   
+#   pst = psTime$Pt[which(!is.na(psTime$Pt))]
+#   
+#   
+#   p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
+#                                          modules=modules, show_labels_row = TRUE)
+#   
+# })
 
 output$elpi_plot <- renderPlot({
   if (DEBUG) cat(file = stderr(), "elpi_plot started.\n")
@@ -185,11 +250,22 @@ output$elpi_plot <- renderPlot({
   tree_data <- elpiTreeData()
   cep <- elpiGraphCompute()
   PointLabel <- elpiPointLabel()
+  doCalc <- input$elpiCalc
+  projections <- projections()
+  dimX <- input$dimElpiX
+  dimY <- input$dimElpiY
+  dimCol <- input$dimElpiCol
+  
+  if (!doCalc) {
+    require(ggplot2)
+    p1 <- ggplot(projections, aes_string(dimX, dimY, colour = dimCol)) + geom_point()
+    return(p1)
+  }
   
   if (is.null(tree_data) | is.null(cep)) {
     return(NULL)
   }
-  if (DEBUGSAVE) {
+  if (.schnappsEnv$DEBUGSAVE) {
     base::save(file = "~/SCHNAPPsDebug/elpi_plot.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
   # load(file = "~/SCHNAPPsDebug/elpi_plot.RData")
@@ -214,12 +290,10 @@ output$elpi_plot <- renderPlot({
 })
 
 output$elpi_moduleHeatmap <- renderPlot({
-  
-  
   draw_trajectory_heatmap(expr_sel, pst, group_name, modules)
-  
 })
 
+callModule(tableSelectionServer, "elpiTableMod", elpiModulesTable)
 
 output$elpi_histo <- renderPlot({
   if (DEBUG) cat(file = stderr(), "elpi_histo started.\n")
@@ -237,7 +311,7 @@ output$elpi_histo <- renderPlot({
   if (is.null(PointLabel)) {
     return(NULL)
   }
-  if (DEBUGSAVE) {
+  if (.schnappsEnv$DEBUGSAVE) {
     base::save(file = "~/SCHNAPPsDebug/elpi_histo.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
   # load("~/SCHNAPPsDebug/elpi_histo.RData")

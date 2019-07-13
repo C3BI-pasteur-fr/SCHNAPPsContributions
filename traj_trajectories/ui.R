@@ -138,8 +138,8 @@ tabList <- list(
         selectInput(
           "dimElpiCol",
           label = "Color by",
-          choices = c("sample", "tsne1", "tsne2", "tsne3"),
-          selected = "sample"
+          choices = c("dbCluster", "tsne1", "tsne2", "tsne3"),
+          selected = "dbCluster"
         )
       ),
       column(
@@ -244,7 +244,15 @@ tabList <- list(
     )),
     fluidRow(column(
       12,
-      plotOutput("elpi_heatmap", height = "672px")
+      # plotOutput("elpi_heatmap", height = "672px")
+      pHeatMapUI("elpiHeatmapPlotModule")
+    )),
+    br(),
+    tags$h3("table"),
+    fluidRow(column(
+      10,
+      offset = 1,
+      tableSelectionUi("elpiTableMod")
     )),
     br(),
     # tags$h3("Heatmap "),

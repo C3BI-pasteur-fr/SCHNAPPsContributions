@@ -714,7 +714,6 @@ traj_elpi_modules <- reactive({
   # load(file="~/SCHNAPPsDebug/traj_elpi_modules.RData")
   
   gene_sel = gene_sel$gene_sel
-  
   set.seed(seed)
   expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,]))
   
@@ -771,7 +770,62 @@ traj_elpi_gimp <- reactive({
   
   return(list(expr_sel = expr_sel, gene_sel = gene_sel))
 })
-
+# 
+# # observeProj ----
+# # update projections
+# observe({
+#   start.time <- base::Sys.time()
+#   on.exit({
+#     printTimeEnd(start.time, "observeProj")
+#     if (!is.null(getDefaultReactiveDomain()))
+#       removeNotification(id = "observeProj")
+#   })
+#   if (!is.null(getDefaultReactiveDomain())) {
+#     showNotification("observeProj", id = "observeProj", duration = NULL)
+#   }
+#   if (DEBUG) cat(file = stderr(), "observeProj started.\n")
+#   
+#   startNode <- input$elpiStartNode
+#   endNode <- input$elpiEndNode
+#   elpimode <- input$ElpiMethod
+#   psTime = traj_getPseudotime()
+#   scEx_log <- scEx_log()
+#   isolate({
+#     prjs <- sessionProjections$prjs
+#   })
+#   
+#   if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+#     return(NULL)
+#   }
+#   if (.schnappsEnv$DEBUGSAVE) {
+#     save(file = "~/SCHNAPPsDebug/observeProj.RData", list = c(ls(), ls(envir = globalenv())))
+#   }
+#   # load(file="~/SCHNAPPsDebug/observeProj.RData")
+#   cn = paste0("traj_", startNode, "_", endNode)
+#   if (cn %in% colnames(prjs)) {
+#     return(NULL)
+#   }
+#   # browser()
+#   if (ncol(prjs) > 0) {
+#     # make sure we are working with the correct cells. This might change when cells were removed.
+#     prjs = prjs[colnames(scEx_log),,drop=FALSE]
+#     # didn't find a way to easily overwrite columns
+#     
+#     if (cn %in% colnames(prjs)) {
+#       prjs[, cn] <- psTime$Pt
+#     } else {
+#       prjs <- base::cbind(prjs, psTime$Pt, deparse.level = 0)
+#       colnames(prjs)[ncol(prjs)] <- cn
+#     }
+#     sessionProjections$prjs <- prjs
+#   } else {
+# 
+#         prjs <- data.frame(cn = psTime$Pt )
+#     rownames(prjs) = colnames(scEx_log)
+#     colnames(prjs)[ncol(prjs)] = cn
+#     sessionProjections$prjs = prjs
+#   }
+# })
 
 #traj_tragetPath ----
 traj_tragetPath <- reactive({

@@ -657,11 +657,14 @@ traj_getPseudotime <- reactive({
   }
   if (DEBUG) cat(file = stderr(), "traj_getPseudotime started.\n")
   scEx_log <- scEx_log()
-  projections <- projections()
+  scEx_log_sha <- scEx_log_sha()
   TreeEPG <- elpiGraphCompute()
+  TreeEPG_sha <- TreeEPG_sha()
+  
   elpimode <- input$ElpiMethod
   tree_data <- elpiTreeData()
   tragetPath <- traj_tragetPath()
+  targetPathSha <- traj_targetPathSha()
   seed <- input$elpiSeed
   
   if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle" || length(tragetPath) == 0) {
@@ -671,6 +674,23 @@ traj_getPseudotime <- reactive({
     save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
+
+  cacheResult <- checkShaCache(moduleName = "traj_getPseudotime", 
+                               moduleParameters = list(scEx_log_sha, TreeEPG_sha,
+                                                       tree_data, targetPathSha,
+                                                       elpimode, seed))
+  if (cacheResult$status == "finished") {
+    return(cacheResult$retVal)
+  }
+  if (cacheResult$status == "running") {
+    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
+    return(NULL)
+  }
+  if (cacheResult$status == "error") {
+    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
+    return(NULL)
+  }
+  
   set.seed(seed)
   # computing a Partition structure
   PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions)
@@ -681,10 +701,35 @@ traj_getPseudotime <- reactive({
                                                       Edges = TreeEPG[[length(TreeEPG)]]$Edges$Edges,
                                                       Partition = PartStruct$Partition)
   psTime = ElPiGraph.R::getPseudotime(ProjStruct = ProjStruct, NodeSeq = names(tragetPath[[1]]))
-  
+ 
+  writeShaCache(moduleName = "traj_getPseudotime", 
+                moduleParameters = list(scEx_log_sha, TreeEPG,
+                                        tree_data, targetPathSha,
+                                        elpimode, seed),
+                retVal = psTime,
+                status = "finished",
+                message = "")
+  return(psTime)
   
 })
 
+traj_targetPathSha <- reactive({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "traj_targetPathSha")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "traj_targetPathSha")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("traj_targetPathSha", id = "traj_targetPathSha", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "traj_getPseudotime started.\n")
+  # browser()
+  targetPath <- traj_tragetPath()
+  if(is.null(targetPath) | length(targetPath)==0)
+    return("")
+  sha1(as.character(targetPath[[1]]))
+})
 
 ## traj_elpi_modules -----
 traj_elpi_modules <- reactive({
@@ -699,20 +744,42 @@ traj_elpi_modules <- reactive({
   }
   if (DEBUG) cat(file = stderr(), "traj_elpi_modules started.\n")
   scEx_log <- scEx_log()
-  projections <- projections()
+  scEx_log_sha<- scEx_log_sha()
   TreeEPG <- elpiGraphCompute()
+  TreeEPG_sha <- TreeEPG_sha()
+  
   elpimode <- input$ElpiMethod
   gene_sel <- traj_elpi_gimp()
   seed <- input$elpiSeed
 
-  if (is.null(scEx_log) | is.null(gene_sel) | elpimode=="computeElasticPrincipalCircle" | nrow(gene_sel$gene_sel)<1) {
+  # add a button to check result.
+  # This button will invalidate this reactive and restart checking of cache.
+  # input$elpi_modules_check
+  
+  if (is.null(scEx_log) | is.null(gene_sel) | elpimode=="computeElasticPrincipalCircle" ) {
+    return(NULL)
+  }
+  if (nrow(gene_sel$gene_sel)<1) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/traj_elpi_modules.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/traj_elpi_modules.RData")
-  
+  cacheResult <- checkShaCache(moduleName = "traj_elpi_modules", 
+                              moduleParameters = list(scEx_log_sha, TreeEPG_sha,
+                                                      elpimode, gene_sel, seed))
+  if (cacheResult$status == "finished") {
+    return(chacheResult$retVal)
+  }
+  if (cacheResult$status == "running") {
+    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
+    return(NULL)
+  }
+  if (cacheResult$status == "error") {
+    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
+    return(NULL)
+  }
   gene_sel = gene_sel$gene_sel
   set.seed(seed)
   expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,]))
@@ -725,7 +792,32 @@ traj_elpi_modules <- reactive({
   modules$symbol <- fd[modules$feature, "symbol"]
   rownames(modules) <- make.unique(as.character(modules$symbol, sep = "___"))
   
+  writeShaCache(moduleName = "traj_elpi_modules", 
+                moduleParameters = list(scEx_log_sha, TreeEPG_sha,
+                                        elpimode, gene_sel, seed),
+                retVal = modules,
+                status = "finished",
+                message = "")
   return(modules)
+})
+
+TreeEPG_sha <- reactive({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "TreeEPG_sha")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "TreeEPG_sha")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("TreeEPG_sha", id = "TreeEPG_sha", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "TreeEPG_sha started.\n")
+  # browser()
+  TreeEPG <- elpiGraphCompute()
+  if (is.null(TreeEPG)){
+    return(NULL)
+  }
+  sha1(as.character(TreeEPG))
 })
 
 # traj_elpi_gimp -----
@@ -873,6 +965,7 @@ elpiGraphCompute <- reactive({
   ProbPoint <- input$elpiProbPoint # 0.1-1.0
   method <- input$ElpiMethod
   tree_data <- elpiTreeData()
+  
   doCalc <- input$elpiCalc
   dimUse <-  input$dimElpi
   seed <- input$elpiSeed
@@ -886,6 +979,21 @@ elpiGraphCompute <- reactive({
     base::save(file = "~/SCHNAPPsDebug/elpiCalc.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
   # load("~/SCHNAPPsDebug/elpiCalc.RData")
+  cacheResult <- checkShaCache(moduleName = "elpiGraphCompute", 
+                               moduleParameters = list(nReps, NumNodes, ProbPoint,
+                                                       method, doCalc, dimUse, seed, tree_data))
+  if (cacheResult$status == "finished") {
+    return(cacheResult$retVal)
+  }
+  if (cacheResult$status == "running") {
+    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
+    return(NULL)
+  }
+  if (cacheResult$status == "error") {
+    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
+    return(NULL)
+  }
+  
   set.seed(seed)
   if (dimUse == "elpiPCA") {
     elpiDoPCA = TRUE
@@ -907,6 +1015,13 @@ elpiGraphCompute <- reactive({
     CenterData = elipCenter, 
     n.cores = detectCores() - 1
   ))
+  writeShaCache(moduleName = "elpiGraphCompute", 
+                moduleParameters = list(nReps, NumNodes, ProbPoint,
+                                        method, doCalc, dimUse, seed, tree_data),
+                retVal = cep,
+                status = "finished",
+                message = "")
+  
   return(cep)
 })
 
@@ -995,7 +1110,7 @@ elpiModulesTable <- reactive({
   # dimCol = input$dimScorpiusCol
   doCalc <- input$elpiCalc
   
-  if (!doCalc | is.null(scEx_log)) {
+  if (!doCalc | is.null(scEx_log) | is.null(expr_sel)) {
     if (DEBUG) cat(file = stderr(), paste("elpiModulesTable:NULL\n"))
     return(NULL)
   }
@@ -1010,7 +1125,7 @@ elpiModulesTable <- reactive({
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
   
-  browser()
+  # browser()
   gene_selDF <- as.data.frame(expr_sel$gene_sel)
   rownames(gene_selDF) = gene_selDF[,1]
   gene_selDF = gene_selDF[,-1]

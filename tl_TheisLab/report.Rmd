@@ -30,7 +30,7 @@ require(ggplot2)
 require(DT)
 require(pheatmap)
 require(threejs)
-require(sm)
+# require(sm)
 require(RColorBrewer)
 require(mclust)
 require(reshape)
@@ -72,7 +72,7 @@ callModule(
   crHeatImage
 )
 
-```{r theis, eval=TRUE, include=FALSE, warning=FALSE, error=FALSE}
+```{r theis, eval=FALSE, include=FALSE, warning=FALSE, error=FALSE}
 set.seed(seed = seed)
 prioritized_genes = prioritize_top_genes(gbm,
                                          as.numeric(as.character(projections$dbCluster)),
@@ -85,7 +85,7 @@ prioritized_genes = prioritize_top_genes(gbm,
 ```
 
 
-```{r theis_func, echo=TRUE}
+```{r theis_func, echo=TRUE, eval=FALSE}
 require(pheatmap)
   cat(file = stderr(), paste("crHeatImage_func\n"))
   heatmapData <- crHeatImage_func(gbm, projections, prioritized_genes) 
@@ -120,7 +120,7 @@ cat(file = stderr(), paste("save\n"))
 
 showing only genes marked as significant (max 200 genes)
 
-```{r bj-theis-table, echo=TRUE, warning=FALSE, error=FALSE}
+```{r bj-theis-table, echo=TRUE, warning=FALSE, error=FALSE, eval=FALSE}
 require("forcats")
 require("tidyverse")
 prioritized_genes <- prioritized_genes_func(gbm, projections, seed = 1)
@@ -162,7 +162,7 @@ DT::datatable(dt[1:maxRow, 1:maxCol],
 ```
 maxRow for Data table: `r maxRow`
 
-```{r savetheis, echo=TRUE}
+```{r savetheis, echo=TRUE, eval=FALSE}
 # save full table in tmp folder to be included in report
   write.csv(dt, file = paste0(reportTempDir, "/crSignificantGenes.csv"))
 

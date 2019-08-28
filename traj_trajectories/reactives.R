@@ -675,21 +675,21 @@ traj_getPseudotime <- reactive({
   }
   # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
 
-  cacheResult <- checkShaCache(moduleName = "traj_getPseudotime", 
-                               moduleParameters = list(scEx_log_sha, TreeEPG_sha,
-                                                       tree_data, targetPathSha,
-                                                       elpimode, seed))
-  if (cacheResult$status == "finished") {
-    return(cacheResult$retVal)
-  }
-  if (cacheResult$status == "running") {
-    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
-    return(NULL)
-  }
-  if (cacheResult$status == "error") {
-    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
-    return(NULL)
-  }
+  # cacheResult <- checkShaCache(moduleName = "traj_getPseudotime", 
+  #                              moduleParameters = list(scEx_log_sha, TreeEPG_sha,
+  #                                                      tree_data, targetPathSha,
+  #                                                      elpimode, seed))
+  # if (cacheResult$status == "finished") {
+  #   return(cacheResult$retVal)
+  # }
+  # if (cacheResult$status == "running") {
+  #   showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
+  #   return(NULL)
+  # }
+  # if (cacheResult$status == "error") {
+  #   showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
+  #   return(NULL)
+  # }
   
   set.seed(seed)
   # computing a Partition structure
@@ -702,13 +702,13 @@ traj_getPseudotime <- reactive({
                                                       Partition = PartStruct$Partition)
   psTime = ElPiGraph.R::getPseudotime(ProjStruct = ProjStruct, NodeSeq = names(tragetPath[[1]]))
  
-  writeShaCache(moduleName = "traj_getPseudotime", 
-                moduleParameters = list(scEx_log_sha, TreeEPG,
-                                        tree_data, targetPathSha,
-                                        elpimode, seed),
-                retVal = psTime,
-                status = "finished",
-                message = "")
+  # writeShaCache(moduleName = "traj_getPseudotime", 
+  #               moduleParameters = list(scEx_log_sha, TreeEPG,
+  #                                       tree_data, targetPathSha,
+  #                                       elpimode, seed),
+  #               retVal = psTime,
+  #               status = "finished",
+  #               message = "")
   return(psTime)
   
 })
@@ -766,20 +766,21 @@ traj_elpi_modules <- reactive({
     save(file = "~/SCHNAPPsDebug/traj_elpi_modules.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/traj_elpi_modules.RData")
-  cacheResult <- checkShaCache(moduleName = "traj_elpi_modules", 
-                              moduleParameters = list(scEx_log_sha, TreeEPG_sha,
-                                                      elpimode, gene_sel, seed))
-  if (cacheResult$status == "finished") {
-    return(chacheResult$retVal)
-  }
-  if (cacheResult$status == "running") {
-    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
-    return(NULL)
-  }
-  if (cacheResult$status == "error") {
-    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
-    return(NULL)
-  }
+  
+  # cacheResult <- checkShaCache(moduleName = "traj_elpi_modules", 
+  #                             moduleParameters = list(scEx_log_sha, TreeEPG_sha,
+  #                                                     elpimode, gene_sel, seed))
+  # if (cacheResult$status == "finished") {
+  #   return(chacheResult$retVal)
+  # }
+  # if (cacheResult$status == "running") {
+  #   showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
+  #   return(NULL)
+  # }
+  # if (cacheResult$status == "error") {
+  #   showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
+  #   return(NULL)
+  # }
   gene_sel = gene_sel$gene_sel
   set.seed(seed)
   expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,]))
@@ -792,12 +793,12 @@ traj_elpi_modules <- reactive({
   modules$symbol <- fd[modules$feature, "symbol"]
   rownames(modules) <- make.unique(as.character(modules$symbol, sep = "___"))
   
-  writeShaCache(moduleName = "traj_elpi_modules", 
-                moduleParameters = list(scEx_log_sha, TreeEPG_sha,
-                                        elpimode, gene_sel, seed),
-                retVal = modules,
-                status = "finished",
-                message = "")
+  # writeShaCache(moduleName = "traj_elpi_modules", 
+  #               moduleParameters = list(scEx_log_sha, TreeEPG_sha,
+  #                                       elpimode, gene_sel, seed),
+  #               retVal = modules,
+  #               status = "finished",
+  #               message = "")
   return(modules)
 })
 
@@ -979,20 +980,21 @@ elpiGraphCompute <- reactive({
     base::save(file = "~/SCHNAPPsDebug/elpiCalc.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
   # load("~/SCHNAPPsDebug/elpiCalc.RData")
-  cacheResult <- checkShaCache(moduleName = "elpiGraphCompute", 
-                               moduleParameters = list(nReps, NumNodes, ProbPoint,
-                                                       method, doCalc, dimUse, seed, tree_data))
-  if (cacheResult$status == "finished") {
-    return(cacheResult$retVal)
-  }
-  if (cacheResult$status == "running") {
-    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
-    return(NULL)
-  }
-  if (cacheResult$status == "error") {
-    showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
-    return(NULL)
-  }
+
+  #   cacheResult <- checkShaCache(moduleName = "elpiGraphCompute", 
+  #                              moduleParameters = list(nReps, NumNodes, ProbPoint,
+  #                                                      method, doCalc, dimUse, seed, tree_data))
+  # if (cacheResult$status == "finished") {
+  #   return(cacheResult$retVal)
+  # }
+  # if (cacheResult$status == "running") {
+  #   showNotification(cacheResult$message, id = "traj_elpi_modules", duration = 10)
+  #   return(NULL)
+  # }
+  # if (cacheResult$status == "error") {
+  #   showNotification(cacheResult$message, id = "traj_elpi_modules", duration = NULL, type="error")
+  #   return(NULL)
+  # }
   
   set.seed(seed)
   if (dimUse == "elpiPCA") {
@@ -1015,12 +1017,12 @@ elpiGraphCompute <- reactive({
     CenterData = elipCenter, 
     n.cores = detectCores() - 1
   ))
-  writeShaCache(moduleName = "elpiGraphCompute", 
-                moduleParameters = list(nReps, NumNodes, ProbPoint,
-                                        method, doCalc, dimUse, seed, tree_data),
-                retVal = cep,
-                status = "finished",
-                message = "")
+  # writeShaCache(moduleName = "elpiGraphCompute", 
+  #               moduleParameters = list(nReps, NumNodes, ProbPoint,
+  #                                       method, doCalc, dimUse, seed, tree_data),
+  #               retVal = cep,
+  #               status = "finished",
+  #               message = "")
   
   return(cep)
 })

@@ -1,6 +1,248 @@
 require(ElPiGraph.R)
 require(plyr)
 
+observe({
+  .schnappsEnv$dimScorpiusX <- input$dimScorpiusX
+  .schnappsEnv$dimScorpiusY <- input$dimScorpiusY
+  .schnappsEnv$dimScorpiusCol <- input$dimScorpiusCol
+  
+})
+# updateScorpiusInput <- reactive({
+observe({  
+  tsneData <- projections()
+  
+  # Can use character(0) to remove all choices
+  if (is.null(tsneData)) {
+    return(NULL)
+  }
+  
+  # Can also set the label and select items
+  if (is.null(.schnappsEnv$dimScorpiusX)) {
+    .schnappsEnv$dimScorpiusX = colnames(tsneData)[1]
+  }
+  if (is.null(.schnappsEnv$dimScorpiusY)) {
+    .schnappsEnv$dimScorpiusY = colnames(tsneData)[2]
+  }
+  if (is.null(.schnappsEnv$dimScorpiusCol)) {
+    .schnappsEnv$dimScorpiusCol = "dbCluster"
+  }
+  updateSelectInput(session, "dimScorpiusX",
+                    choices = colnames(tsneData),
+                    selected = .schnappsEnv$dimScorpiusX
+  )
+  
+  updateSelectInput(session, "dimScorpiusY",
+                    choices = colnames(tsneData),
+                    selected = .schnappsEnv$dimScorpiusY
+  )
+  updateSelectInput(session, "dimScorpiusCol",
+                    choices = colnames(tsneData),
+                    selected = .schnappsEnv$dimScorpiusCol
+  )
+  # updateNumericInput(session, "scorpMaxGenes",
+  #                   value = 500
+  # )
+})
+# elpi observers ----
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: dimElpi\n"))
+  .schnappsEnv$dimElpi <- input$dimElpi
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiX\n"))
+  .schnappsEnv$dimElpiX <- input$dimElpiX
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiY\n"))
+  .schnappsEnv$dimElpiY <- input$dimElpiY
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiCol\n"))
+  .schnappsEnv$dimElpiCol <- input$dimElpiCol
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpiSeed\n"))
+  .schnappsEnv$elpiSeed <- input$elpiSeed
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: ElpiMethod\n"))
+  .schnappsEnv$ElpiMethod <- input$ElpiMethod
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpiNumNodes\n"))
+  .schnappsEnv$elpiNumNodes <- input$elpiNumNodes
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpinReps\n"))
+  .schnappsEnv$elpinReps <- input$elpinReps
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpiProbPoint\n"))
+  .schnappsEnv$elpiProbPoint <- input$elpiProbPoint
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpiStartNode\n"))
+  .schnappsEnv$elpiStartNode <- input$elpiStartNode
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpiEndNode\n"))
+  .schnappsEnv$elpiEndNode <- input$elpiEndNode
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_num_permutations\n"))
+  .schnappsEnv$elpi_num_permutations <- input$elpi_num_permutations
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_ntree\n"))
+  .schnappsEnv$elpi_ntree <- input$elpi_ntree
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_ntree_perm\n"))
+  .schnappsEnv$elpi_ntree_perm <- input$elpi_ntree_perm
+})
+observe({
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_nGenes\n"))
+  .schnappsEnv$elpi_nGenes <- input$elpi_nGenes
+})
+observe({
+  endpoints <- traj_endpoints()
+  
+  # browser()
+  # Can use character(0) to remove all choices
+  if (is.null(endpoints)) {
+    return(NULL)
+  }
+  # save endpoint in global variable to make sure that we don't update unnecssarily
+  if (!is.null(.schnappsEnv$elpiEndpoints) & 
+      length(endpoints) == length(.schnappsEnv$elpiEndpoints) &
+      all(sort(endpoints) == sort(.schnappsEnv$elpiEndpoints))
+  ) return(NULL)
+  .schnappsEnv$elpiEndpoints = endpoints
+  # Can also set the label and select items
+  updateSelectInput(session, inputId = "elpiStartNode",
+                    choices = endpoints,
+                    selected = endpoints[1]
+  )
+  updateSelectInput(session, inputId = "elpiEndNode",
+                    choices = endpoints,
+                    selected = endpoints[length(endpoints)]
+  )
+})
+
+
+observe({
+  projections <- projections()
+  
+  # Can use character(0) to remove all choices
+  if (is.null(projections)) {
+    return(NULL)
+  }
+  
+  # Can also set the label and select items
+  updateSelectInput(session, "dimElpiX",
+                    choices = colnames(projections),
+                    selected = .schnappsEnv$dimElpiX
+  )
+  
+  updateSelectInput(session, "dimElpiY",
+                    choices = colnames(projections),
+                    selected = .schnappsEnv$dimElpiY
+  )
+  updateSelectInput(session, "dimElpiCol",
+                    choices = colnames(projections),
+                    selected = .schnappsEnv$dimElpiCol
+  )
+  updateNumericInput(session, "elpiSeed",
+                     value = .schnappsEnv$elpiSeed
+  )
+  updateSelectInput(session, "dimElpi",
+                    selected = .schnappsEnv$dimElpi
+  )
+  updateSelectInput(session, "ElpiMethod",
+                    selected = .schnappsEnv$ElpiMethod
+  )
+  updateNumericInput(session, "elpiNumNodes",
+                     value = .schnappsEnv$elpiNumNodes
+  )
+  updateNumericInput(session, "elpinReps",
+                     value = .schnappsEnv$elpinReps
+  )
+  updateNumericInput(session, "elpiProbPoint",
+                     value = .schnappsEnv$elpiProbPoint
+  )
+  updateNumericInput(session, "elpi_num_permutations",
+                     value = .schnappsEnv$elpi_num_permutations
+  )
+  updateNumericInput(session, "elpi_ntree",
+                     value = .schnappsEnv$elpi_ntree
+  )
+  updateNumericInput(session, "elpi_ntree_perm",
+                     value = .schnappsEnv$elpi_ntree_perm
+  )
+  updateNumericInput(session, "elpi_nGenes",
+                     value = .schnappsEnv$elpi_nGenes
+  )
+  
+  
+})
+# observeProj ----
+# update projections
+observe({
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "observeProj")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "observeProj")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("observeProj", id = "observeProj", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "observeProj started.\n")
+  
+  startNode <- input$elpiStartNode
+  endNode <- input$elpiEndNode
+  elpimode <- input$ElpiMethod
+  psTime = traj_getPseudotime()
+  scEx_log <- scEx_log()
+  isolate({
+    prjs <- sessionProjections$prjs
+  })
+  
+  if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/observeProj.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/observeProj.RData")
+  cn = paste0("traj_", startNode, "_", endNode)
+  if (cn %in% colnames(prjs)) {
+    return(NULL)
+  }
+  # browser()
+  if (ncol(prjs) > 0) {
+    # make sure we are working with the correct cells. This might change when cells were removed.
+    prjs = prjs[colnames(scEx_log),,drop=FALSE]
+    # didn't find a way to easily overwrite columns
+    
+    if (cn %in% colnames(prjs)) {
+      prjs[, cn] <- psTime$Pt
+    } else {
+      prjs <- base::cbind(prjs, psTime$Pt, deparse.level = 0)
+      colnames(prjs)[ncol(prjs)] <- cn
+    }
+    sessionProjections$prjs <- prjs
+  } else {
+    
+    prjs <- data.frame(cn = psTime$Pt )
+    rownames(prjs) = colnames(scEx_log)
+    colnames(prjs)[ncol(prjs)] = cn
+    sessionProjections$prjs = prjs
+  }
+})
+
+
+
 # The output type has to be in line with the tablist item. I.e. plotOutput in this case
 output$scropius_trajectory_plot <- renderPlot({
   if (DEBUG) cat(file = stderr(), "scropius_trajectory_plot started.\n")
@@ -18,9 +260,9 @@ output$scropius_trajectory_plot <- renderPlot({
   projections <- projections()
   space <- scorpiusSpace()
   # upI <- updateScorpiusInput() # needed to update input
-  dimX <- input$dimScorpiusX
-  dimY <- input$dimScorpiusY
-  dimCol <- input$dimScorpiusCol
+  dimX <- .schnappsEnv$dimScorpiusX
+  dimY <- .schnappsEnv$dimScorpiusY
+  dimCol <- .schnappsEnv$dimScorpiusCol
   doCalc <- input$scorpiusCalc
   
   if (is.null(projections)) {

@@ -47,8 +47,8 @@ tabList <- list(
           selectInput(
             "dimScorpiusCol",
             label = "Color by",
-            choices = c("sample", "tsne1", "tsne2", "tsne3"),
-            selected = "sample"
+            choices = c("sampleNames", "tsne1", "tsne2", "tsne3"),
+            selected = "sampleNames"
           )
         ),
         column(

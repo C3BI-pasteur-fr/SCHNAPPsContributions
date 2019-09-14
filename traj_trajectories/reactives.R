@@ -400,7 +400,7 @@ traj_endpoints <- reactive({
   elpimode <- input$ElpiMethod
   seed <- input$elpiSeed
   
-  if (is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
+  if (is.null(projections) || is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle") {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {

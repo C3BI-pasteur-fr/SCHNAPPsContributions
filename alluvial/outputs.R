@@ -3,6 +3,20 @@ require(ggplot2)
 require(ggalluvial)
 # Alluvial plot of two factors
 output$alluvial_plot <- renderPlot({
+  if (DEBUG) {
+    cat(file = stderr(), "alluvial_plot started.\n")
+  }
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "alluvial_plot")
+    if (!is.null(getDefaultReactiveDomain())) {
+      removeNotification(id = "alluvial_plot")
+    }
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("alluvial_plot", id = "alluvial_plot", duration = NULL)
+  }
+  
   # load reactive data
   projections <- projections()
   alluiv1 <- input$alluiv1
@@ -27,14 +41,14 @@ output$alluvial_plot <- renderPlot({
   dat = projections[,c(alluiv1, alluiv2)]
   # dat$cells = rownames(projections)
   gg = ggplot(as.data.frame(dat),
-         aes_string( axis1 = alluiv1, axis2 = alluiv2)) +
+              aes_string( axis1 = alluiv1, axis2 = alluiv2)) +
     geom_alluvium( width = 1/12) +
     geom_stratum(width = 1/12, fill = "black", color = "grey") +
     geom_label(stat = "stratum", label.strata = TRUE) +
     scale_x_discrete(limits = c(alluiv1, alluiv2), expand = c(.05, .05)) +
     scale_fill_brewer(type = "qual", palette = "Set1") +
     ggtitle(paste("Alluvial plot of ", alluiv1, "and", alluiv2))
-
+  
   # create and return the plot
   # ggalluvial::(dummyNRow)
   return(gg)

@@ -44,7 +44,7 @@ output$alluvial_plot <- renderPlot({
 observe({
   projections <- projections()
   
-  save(file = "~/SCHNAPPsDebug/alluvial_plot2.RData", list = c(ls(), ls(envir = globalenv())))
+  # save(file = "~/SCHNAPPsDebug/alluvial_plot2.RData", list = c(ls(), ls(envir = globalenv())))
   # load(file="~/SCHNAPPsDebug/alluvial_plot2.RData")
   facs = which(lapply(projections, class) == "factor")
   idx=1

@@ -1,14 +1,26 @@
+# Loading required package: plyr
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#   You have loaded plyr after dplyr - this is likely to cause problems.
+# If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
+#   library(plyr); library(dplyr)
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 require(ElPiGraph.R)
 require(plyr)
+library(dplyr)
+
+
+
+observeEvent(input$scorpiusCalc,{
+  isolate(scorpiusTrajectory())
+})
 
 observe({
   .schnappsEnv$dimScorpiusX <- input$dimScorpiusX
   .schnappsEnv$dimScorpiusY <- input$dimScorpiusY
   .schnappsEnv$dimScorpiusCol <- input$dimScorpiusCol
-  
 })
 # updateScorpiusInput <- reactive({
-observe({  
+observe({
   tsneData <- projections()
   
   # Can use character(0) to remove all choices
@@ -18,13 +30,13 @@ observe({
   
   # Can also set the label and select items
   if (is.null(.schnappsEnv$dimScorpiusX)) {
-    .schnappsEnv$dimScorpiusX = colnames(tsneData)[1]
+    .schnappsEnv$dimScorpiusX <- colnames(tsneData)[1]
   }
   if (is.null(.schnappsEnv$dimScorpiusY)) {
-    .schnappsEnv$dimScorpiusY = colnames(tsneData)[2]
+    .schnappsEnv$dimScorpiusY <- colnames(tsneData)[2]
   }
   if (is.null(.schnappsEnv$dimScorpiusCol)) {
-    .schnappsEnv$dimScorpiusCol = "dbCluster"
+    .schnappsEnv$dimScorpiusCol <- "dbCluster"
   }
   updateSelectInput(session, "dimScorpiusX",
                     choices = colnames(tsneData),
@@ -113,17 +125,21 @@ observe({
     return(NULL)
   }
   # save endpoint in global variable to make sure that we don't update unnecssarily
-  if (!is.null(.schnappsEnv$elpiEndpoints) & 
+  if (!is.null(.schnappsEnv$elpiEndpoints) &
       length(endpoints) == length(.schnappsEnv$elpiEndpoints) &
       all(sort(endpoints) == sort(.schnappsEnv$elpiEndpoints))
-  ) return(NULL)
-  .schnappsEnv$elpiEndpoints = endpoints
+  ) {
+    return(NULL)
+  }
+  .schnappsEnv$elpiEndpoints <- endpoints
   # Can also set the label and select items
-  updateSelectInput(session, inputId = "elpiStartNode",
+  updateSelectInput(session,
+                    inputId = "elpiStartNode",
                     choices = endpoints,
                     selected = endpoints[1]
   )
-  updateSelectInput(session, inputId = "elpiEndNode",
+  updateSelectInput(session,
+                    inputId = "elpiEndNode",
                     choices = endpoints,
                     selected = endpoints[length(endpoints)]
   )
@@ -182,8 +198,6 @@ observe({
   updateNumericInput(session, "elpi_nGenes",
                      value = .schnappsEnv$elpi_nGenes
   )
-  
-  
 })
 # observeProj ----
 # update projections
@@ -191,8 +205,9 @@ observe({
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "observeProj")
-    if (!is.null(getDefaultReactiveDomain()))
+    if (!is.null(getDefaultReactiveDomain())) {
       removeNotification(id = "observeProj")
+    }
   })
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("observeProj", id = "observeProj", duration = NULL)
@@ -202,27 +217,27 @@ observe({
   startNode <- input$elpiStartNode
   endNode <- input$elpiEndNode
   elpimode <- input$ElpiMethod
-  psTime = traj_getPseudotime()
+  psTime <- traj_getPseudotime()
   scEx_log <- scEx_log()
   isolate({
     prjs <- sessionProjections$prjs
   })
   
-  if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+  if (is.null(scEx_log) || is.null(psTime) || elpimode == "computeElasticPrincipalCircle") {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/observeProj.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/observeProj.RData")
-  cn = paste0("traj_", startNode, "_", endNode)
+  cn <- paste0("traj_", startNode, "_", endNode)
   if (cn %in% colnames(prjs)) {
     return(NULL)
   }
   # browser()
   if (ncol(prjs) > 0) {
     # make sure we are working with the correct cells. This might change when cells were removed.
-    prjs = prjs[colnames(scEx_log),,drop=FALSE]
+    prjs <- prjs[colnames(scEx_log), , drop = FALSE]
     # didn't find a way to easily overwrite columns
     
     if (cn %in% colnames(prjs)) {
@@ -233,24 +248,24 @@ observe({
     }
     sessionProjections$prjs <- prjs
   } else {
-    
-    prjs <- data.frame(cn = psTime$Pt )
-    rownames(prjs) = colnames(scEx_log)
-    colnames(prjs)[ncol(prjs)] = cn
-    sessionProjections$prjs = prjs
+    prjs <- data.frame(cn = psTime$Pt)
+    rownames(prjs) <- colnames(scEx_log)
+    colnames(prjs)[ncol(prjs)] <- cn
+    sessionProjections$prjs <- prjs
   }
 })
 
 
-
+# scropius_trajectory_plot ----
 # The output type has to be in line with the tablist item. I.e. plotOutput in this case
 output$scropius_trajectory_plot <- renderPlot({
   if (DEBUG) cat(file = stderr(), "scropius_trajectory_plot started.\n")
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "scropius_trajectory_plot")
-    if (!is.null(getDefaultReactiveDomain()))
+    if (!is.null(getDefaultReactiveDomain())) {
       removeNotification(id = "scropius_trajectory_plot")
+    }
   })
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("scropius_trajectory_plot", id = "scropius_trajectory_plot", duration = NULL)
@@ -260,29 +275,29 @@ output$scropius_trajectory_plot <- renderPlot({
   projections <- projections()
   space <- scorpiusSpace()
   # upI <- updateScorpiusInput() # needed to update input
-  dimX <- .schnappsEnv$dimScorpiusX
-  dimY <- .schnappsEnv$dimScorpiusY
-  dimCol <- .schnappsEnv$dimScorpiusCol
-  doCalc <- input$scorpiusCalc
+  dimX <- input$dimScorpiusX
+  dimY <- input$dimScorpiusY
+  dimCol <- input$dimScorpiusCol
+  # doCalc <- input$scorpiusCalc
   
-  if (is.null(projections)) {
+  if (is.null(projections) ) {
     return(NULL)
   }
-  if (!doCalc) {
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/scropius_trajectory_plot.RData")
+  if (is.null(space) | ncol(space) == 0) {
     require(ggplot2)
     p1 <- ggplot(projections, aes_string(dimX, dimY, colour = dimCol)) + geom_point()
     return(p1)
   }
   
-  if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
-  }
-  # load(file="~/SCHNAPPsDebug/scropius_trajectory_plot.RData")
   # space <- projections[, c(dimX, dimY)]
   require(SCORPIUS)
   # traj <- SCORPIUS::infer_trajectory(space)
-  colnames(traj) = c("Comp1", "Comp2", "time")
-  draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], path = as.matrix(traj[,1:2]))
+  colnames(traj) <- c("Comp1", "Comp2", "time")
+  draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], path = as.matrix(traj[, 1:2]))
 })
 
 callModule(tableSelectionServer, "scorpiusTableMod", scorpiusModulesTable)
@@ -293,8 +308,9 @@ scorpiusHeatmapPlotReactive <- reactive({
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "scorpiusHeatmapPlotReactive")
-    if (!is.null(getDefaultReactiveDomain()))
+    if (!is.null(getDefaultReactiveDomain())) {
       removeNotification(id = "scorpiusHeatmapPlotReactive")
+    }
   })
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("scorpiusHeatmapPlotReactive", id = "scorpiusHeatmapPlotReactive", duration = NULL)
@@ -307,13 +323,13 @@ scorpiusHeatmapPlotReactive <- reactive({
   modules <- scorpiusModules()
   
   dimCol <- input$dimScorpiusCol
-  doCalc <- input$scorpiusCalc
+  # doCalc <- input$scorpiusCalc
   pixelratio <- session$clientData$pixelratio
   width <- session$clientData$output_plot_width
   height <- session$clientData$output_plot_height
   
   
-  if (!doCalc | is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(traj)) {
+  if (is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(traj)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
     return(NULL)
   }
@@ -338,9 +354,10 @@ scorpiusHeatmapPlotReactive <- reactive({
                                   filename = normalizePath(outfile, mustWork = FALSE)
   )
   
-  exportTestValues(scorpiusHeatmapPlotReactive = {retVal})  
+  exportTestValues(scorpiusHeatmapPlotReactive = {
+    retVal
+  })
   return(retVal)
-  
 })
 
 callModule(
@@ -376,8 +393,9 @@ elpiHeatmapPlotReactive <- reactive({
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "elpiHeatmapPlotReactive")
-    if (!is.null(getDefaultReactiveDomain()))
+    if (!is.null(getDefaultReactiveDomain())) {
       removeNotification(id = "elpiHeatmapPlotReactive")
+    }
   })
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("elpiHeatmapPlotReactive", id = "elpiHeatmapPlotReactive", duration = NULL)
@@ -385,7 +403,7 @@ elpiHeatmapPlotReactive <- reactive({
   
   # upI <- updateScorpiusInput() # needed to update input
   projections <- projections()
-  psTime = traj_getPseudotime()
+  psTime <- traj_getPseudotime()
   expr_sel <- traj_elpi_gimp()
   modules <- traj_elpi_modules()
   
@@ -396,15 +414,15 @@ elpiHeatmapPlotReactive <- reactive({
   height <- session$clientData$output_plot_height
   
   
+  
+  if (!doCalc | is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(psTime)) {
+    if (.schnappsEnv$DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
+    return(NULL)
+  }
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/elpiHeatmapPlotReactive.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/elpiHeatmapPlotReactive.RData")
-
-    if (!doCalc | is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(psTime)) {
-    if (.schnappsEnv$DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
-    return(NULL)
-  }
   
   if (is.null(pixelratio)) pixelratio <- 1
   if (is.null(width)) {
@@ -417,15 +435,17 @@ elpiHeatmapPlotReactive <- reactive({
   outfile <- paste0(tempdir(), "/heatmapScorpius", base::sample(1:10000, 1), ".png")
   cat(file = stderr(), paste("saving to: ", outfile, "\n"))
   
-  pst = psTime$Pt[which(!is.na(psTime$Pt))]
+  pst <- psTime$Pt[which(!is.na(psTime$Pt))]
   # modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = F)
-  retVal <- drawTrajectoryHeatmap(expr_sel$expr_sel, time = pst,  projections[rownames(expr_sel$expr_sel), dimCol], modules,
+  retVal <- drawTrajectoryHeatmap(expr_sel$expr_sel,
+                                  time = pst, projections[rownames(expr_sel$expr_sel), dimCol], modules,
                                   filename = normalizePath(outfile, mustWork = FALSE)
   )
   
-  exportTestValues(scorpiusHeatmapPlotReactive = {retVal})  
+  exportTestValues(scorpiusHeatmapPlotReactive = {
+    retVal
+  })
   return(retVal)
-  
 })
 
 callModule(
@@ -434,7 +454,7 @@ callModule(
   elpiHeatmapPlotReactive
 )
 
-# 
+#
 # output$elpi_heatmap <- renderPlot({
 #   start.time <- base::Sys.time()
 #   on.exit({
@@ -452,10 +472,10 @@ callModule(
 #   elpimode <- input$ElpiMethod
 #   tree_data <- elpiTreeData()
 #   tragetPath <- traj_tragetPath()
-#   gene_sel <- traj_elpi_gimp() 
+#   gene_sel <- traj_elpi_gimp()
 #   modules <-  traj_elpi_modules()
 #   psTime = traj_getPseudotime()
-#   
+#
 #   if (is.null(gene_sel) || is.null(scEx_log) || is.null(TreeEPG) || elpimode=="computeElasticPrincipalCircle" || is.null(psTime)) {
 #     return(NULL)
 #   }
@@ -463,18 +483,18 @@ callModule(
 #     save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
 #   }
 #   # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
-#   
+#
 #   ## Select most important genes (set ntree to at least 10000!)
 #   # gene_sel <- geneImport[1:50,]
 #   gene_sel = gene_sel$gene_sel
 #   expr_sel <- t(as.matrix(assays(scEx_log)[[1]][gene_sel$gene,which(!is.na(psTime$Pt))]))
-#   
+#
 #   pst = psTime$Pt[which(!is.na(psTime$Pt))]
-#   
-#   
+#
+#
 #   p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
 #                                          modules=modules, show_labels_row = TRUE)
-#   
+#
 # })
 
 output$elpi_plot <- renderPlot({
@@ -482,8 +502,9 @@ output$elpi_plot <- renderPlot({
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "elpi_plot")
-    if (!is.null(getDefaultReactiveDomain()))
+    if (!is.null(getDefaultReactiveDomain())) {
       removeNotification(id = "elpi_plot")
+    }
   })
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("elpi_plot", id = "elpi_plot", duration = NULL)
@@ -498,13 +519,7 @@ output$elpi_plot <- renderPlot({
   dimY <- input$dimElpiY
   dimCol <- input$dimElpiCol
   
-  if (!doCalc) {
-    require(ggplot2)
-    p1 <- ggplot(projections, aes_string(dimX, dimY, colour = dimCol)) + geom_point()
-    return(p1)
-  }
-  
-  if (is.null(tree_data) | is.null(cep)) {
+  if (is.null(projections)) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -512,14 +527,26 @@ output$elpi_plot <- renderPlot({
   }
   # load(file = "~/SCHNAPPsDebug/elpi_plot.RData")
   
+  if (!doCalc) {
+    require(ggplot2)
+    p1 <- ggplot(projections, aes_string(dimX, dimY, colour = dimCol)) + geom_point()
+    return(p1)
+  }
+  if (is.null(tree_data) | is.null(cep)) {
+    return(NULL)
+  }
+  
+  
   require(ggrepel)
   
   NodeLabs <- 1:nrow(cep[[length(cep)]]$NodePositions)
   NodeLabs[degree(ConstructGraph(cep[[length(cep)]])) != 1] <- NA
   
-  p <- PlotPG(X = tree_data, TargetPG = cep[[length(cep)]],
-              NodeLabels = NodeLabs,
-              LabMult = 5, PointSize = NA, p.alpha = .1)
+  p <- PlotPG(
+    X = tree_data, TargetPG = cep[[length(cep)]],
+    NodeLabels = NodeLabs,
+    LabMult = 5, PointSize = NA, p.alpha = .1
+  )
   
   
   # p <- PlotPG(X = tree_data, TargetPG = cep[[length(cep)]], GroupsLab = PointLabel, p.alpha = 0.9)
@@ -542,8 +569,9 @@ output$elpi_histo <- renderPlot({
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "elpi_histo")
-    if (!is.null(getDefaultReactiveDomain()))
+    if (!is.null(getDefaultReactiveDomain())) {
       removeNotification(id = "elpi_histo")
+    }
   })
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("elpi_histo", id = "elpi_histo", duration = NULL)
@@ -560,4 +588,3 @@ output$elpi_histo <- renderPlot({
   
   barplot(table(PointLabel), las = 2, ylab = "Number of points")
 })
-

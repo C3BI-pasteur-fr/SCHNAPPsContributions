@@ -90,7 +90,23 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
   )
 }
 
+# scorpiuseParameters ----
+# herewith we control that scorpius is only run if the button is pressed.
+scorpiuseParameters <- reactiveValues()
+
+observeEvent(input$updatetScorpiusParameters,{
+  # only react on this value
+  cat(file = stderr(), paste("hit button\n"))
+  scorpiuseParameters$dimX = isolate(input$dimScorpiusX)
+  scorpiuseParameters$dimY = isolate(input$dimScorpiusY)
+  scorpiuseParameters$scInput = isolate(scorpiusInput())
+  scorpiuseParameters$scorpMaxGenes = isolate(input$scorpMaxGenes)
+  scorpiuseParameters$scorpRepeat = isolate(input$scorpRepeat)
+})
+
+
 # scorpiusInput ----
+# read input space from file
 scorpiusInput <- reactive({
   if (DEBUG) cat(file = stderr(), "scorpiusInput started.\n")
   start.time <- base::Sys.time()
@@ -125,6 +141,7 @@ scorpiusInput <- reactive({
 })
 
 # scorpiusSpace ----
+# return projections or loaded space.
 scorpiusSpace <- reactive({
   if (DEBUG) cat(file = stderr(), "scorpiusSpace started.\n")
   start.time <- base::Sys.time()
@@ -136,16 +153,18 @@ scorpiusSpace <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("scorpiusSpace", id = "scorpiusSpace", duration = NULL)
   }
-  projections <- projections()
-  doCalc <- input$scorpiusCalc
-  dimX <- input$dimScorpiusX
-  dimY <- input$dimScorpiusY
-  scInput <- scorpiusInput()
+  
+  
+  projections <- isolate(projections())
+  # doCalc <- input$scorpiusCalc
+  dimX <- scorpiuseParameters$dimX
+  dimY <- scorpiuseParameters$dimY
+  scInput <- scorpiuseParameters$scInput
   
   if (!is.null(scInput)) {
     return(scInput[, c(1, 2)])
   }
-  if (!doCalc | is.null(projections)) {
+  if ( is.null(projections)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusSpace:NULL\n"))
     return(NULL)
   }
@@ -158,7 +177,9 @@ scorpiusSpace <- reactive({
   return(space)
 })
 
+
 # scorpiusTrajectory ----
+# calculate trajectory
 scorpiusTrajectory <- reactive({
   if (DEBUG) cat(file = stderr(), "scorpiusTrajectory started.\n")
   start.time <- base::Sys.time()
@@ -171,14 +192,20 @@ scorpiusTrajectory <- reactive({
     showNotification("scorpiusTrajectory", id = "scorpiusTrajectory", duration = NULL)
   }
   
-  space <- scorpiusSpace()
-  doCalc <- input$scorpiusCalc
-  scInput <- scorpiusInput()
+  # create dependancy on button and return if not pressed once
+  if (input$updatetScorpiusParameters == 0) {
+    return(NULL)
+  }
+  
+  space <- isolate(scorpiusSpace())
+  # doCalc <- input$scorpiusCalc
+  scInput <- isolate(scorpiusInput())
+  
   
   if (!is.null(scInput)) {
     return(scInput)
   }
-  if (!doCalc | is.null(space)) {
+  if (is.null(space) | is.null(space)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusTrajectory:NULL\n"))
     return(NULL)
   }
@@ -218,13 +245,18 @@ scorpiusExpSel <- reactive({
     removeNotification( id = "scorpiusExpSelWARNING")
   }
   
-  scEx_log <- scEx_log()
-  traj <- scorpiusTrajectory()
-  doCalc <- input$scorpiusCalc
-  scorpMaxGenes <- input$scorpMaxGenes
-  scorpRepeat <- input$scorpRepeat
   
-  if (!doCalc | is.null(scEx_log) | is.null(traj)) {
+  # create dependancy on button and return if not pressed once
+  if (input$updatetScorpiusParameters == 0) {
+    return(NULL)
+  }
+  scEx_log <- isolate(scEx_log())
+  traj <- isolate(scorpiusTrajectory())
+  # doCalc <- input$scorpiusCalc
+  scorpMaxGenes <- scorpiuseParameters$scorpMaxGenes
+  scorpRepeat <- scorpiuseParameters$scorpRepeat
+  
+  if (is.null(traj) | is.null(scEx_log) | is.null(traj)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusExpSel:NULL\n"))
     return(NULL)
   }
@@ -260,21 +292,27 @@ scorpiusModules <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     removeNotification( id = "scorpiusModulesWARNING")
   }
-  # browser()
-  scEx_log <- scEx_log()
+  
+  # create dependancy on button and return if not pressed once
+  if (input$updatetScorpiusParameters == 0) {
+    return(NULL)
+  }
+
+    # browser()
+  scEx_log <- isolate(scEx_log())
   # projections = projections()
   # space <- scorpiusSpace()
-  traj <- scorpiusTrajectory()
-  expr_sel <- scorpiusExpSel()
+  traj <- isolate(scorpiusTrajectory())
+  expr_sel <- isolate(scorpiusExpSel())
   
   # scorpiusModules = scorpiusModules()
   # upI <- updateScorpiusInput() # needed to update input
-  dimX <- input$dimScorpiusX
-  dimY <- input$dimScorpiusY
+  dimX <- scorpiuseParameters$dimX
+  dimY <- scorpiuseParameters$dimY
   # dimCol = input$dimScorpiusCol
-  doCalc <- input$scorpiusCalc
+  # doCalc <- input$scorpiusCalc
   
-  if (!doCalc | is.null(scEx_log)) {
+  if (is.null(traj) | is.null(scEx_log)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
     return(NULL)
   }
@@ -289,7 +327,7 @@ scorpiusModules <- reactive({
   # gimp <- gene_importances(t(expression), traj$time, num_permutations = 0, num_threads = 8)
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
-
+  
   modules <- extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
@@ -310,21 +348,28 @@ scorpiusModulesTable <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("scorpiusModulesTable", id = "scorpiusModulesTable", duration = NULL)
   }
-  scEx_log <- scEx_log()
+  
+  
+  # create dependancy on button and return if not pressed once
+  if (input$updatetScorpiusParameters == 0) {
+    return(NULL)
+  }
+  
+  scEx_log <- isolate(scEx_log())
   # projections = projections()
   # space <- scorpiusSpace()
-  traj <- scorpiusTrajectory()
-  expr_sel <- scorpiusExpSel()
-  modules <- scorpiusModules()
+  traj <- isolate(scorpiusTrajectory())
+  expr_sel <- isolate(scorpiusExpSel())
+  modules <- isolate(scorpiusModules())
   
   # scorpiusModules = scorpiusModules()
   # upI <- updateScorpiusInput() # needed to update input
-  dimX <- input$dimScorpiusX
-  dimY <- input$dimScorpiusY
+  dimX <- scorpiuseParameters$dimX
+  dimY <- scorpiuseParameters$dimY
   # dimCol = input$dimScorpiusCol
-  doCalc <- input$scorpiusCalc
+  # doCalc <- input$scorpiusCalc
   
-  if (!doCalc | is.null(scEx_log)) {
+  if (is.null(traj) | is.null(scEx_log)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
     return(NULL)
   }
@@ -448,7 +493,7 @@ traj_getPseudotime <- reactive({
     save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
   }
   # load(file="~/SCHNAPPsDebug/traj_getPseudotime.RData")
-
+  
   # cacheResult <- checkShaCache(moduleName = "traj_getPseudotime", 
   #                              moduleParameters = list(scEx_log_sha, TreeEPG_sha,
   #                                                      tree_data, targetPathSha,
@@ -475,7 +520,7 @@ traj_getPseudotime <- reactive({
                                                       Edges = TreeEPG[[length(TreeEPG)]]$Edges$Edges,
                                                       Partition = PartStruct$Partition)
   psTime = ElPiGraph.R::getPseudotime(ProjStruct = ProjStruct, NodeSeq = names(tragetPath[[1]]))
- 
+  
   # writeShaCache(moduleName = "traj_getPseudotime", 
   #               moduleParameters = list(scEx_log_sha, TreeEPG,
   #                                       tree_data, targetPathSha,
@@ -525,7 +570,7 @@ traj_elpi_modules <- reactive({
   elpimode <- input$ElpiMethod
   gene_sel <- traj_elpi_gimp()
   seed <- input$elpiSeed
-
+  
   # add a button to check result.
   # This button will invalidate this reactive and restart checking of cache.
   # input$elpi_modules_check
@@ -754,7 +799,7 @@ elpiGraphCompute <- reactive({
     base::save(file = "~/SCHNAPPsDebug/elpiCalc.RData", list = c(base::ls(), base::ls(envir = globalenv())))
   }
   # load("~/SCHNAPPsDebug/elpiCalc.RData")
-
+  
   #   cacheResult <- checkShaCache(moduleName = "elpiGraphCompute", 
   #                              moduleParameters = list(nReps, NumNodes, ProbPoint,
   #                                                      method, doCalc, dimUse, seed, tree_data))

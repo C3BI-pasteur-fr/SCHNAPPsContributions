@@ -7,112 +7,93 @@ require(shinycssloaders)
 menuList <- list(
   menuItem("Trajectories",
            # id="trajectoryID",
-    tabName = "TrajectoryList", startExpanded = FALSE,
-    menuSubItem("Scorpius", tabName = "scorpiusTab"), menuSubItem("ELPIGraph", tabName = "elpiGraphTab")
+           tabName = "TrajectoryList", startExpanded = FALSE,
+           menuSubItem("Scorpius", tabName = "scorpiusTab"), menuSubItem("ELPIGraph", tabName = "elpiGraphTab")
   )
 )
 
 
 # tabs with the actual content
 tabList <- list(
-  crHeatMapTab =
-    tabItem(
-      "scorpiusTab",
-      tags$h3("trajectory in 2D space"),
-      fluidRow(column(12,
-        offset = 1,
-        checkboxInput("scorpiusCalc", "calculate", FALSE)
-      )),
+  tabItem(
+    "scorpiusTab",
+    box(
+      title = "Scorpius trajectory inference", solidHeader = TRUE, width = 12, status = 'primary', 
       fluidRow(
-        column(
-          3,
-          selectInput(
-            "dimScorpiusX",
-            label = "Component 1",
-            choices = c("tsne1", "tsne2", "tsne3"),
-            selected = "tsne1"
-          )
-        ),
-        column(
-          3,
-          selectInput(
-            "dimScorpiusY",
-            label = "Component 2",
-            choices = c("tsne1", "tsne2", "tsne3"),
-            selected = "tsne2"
-          )
-        ),
-        column(
-          3,
-          selectInput(
-            "dimScorpiusCol",
-            label = "Color by",
-            choices = c("sampleNames", "tsne1", "tsne2", "tsne3"),
-            selected = "sampleNames"
-          )
-        ),
-        column(
-          3,
-          numericInput(
-            "scorpMaxGenes",
-            label = "max number of Genes",
-            min = 200, max = 20000, step = 10,
-            value = 500
-          )
+        column(width = 12, offset = 1,
+               actionButton("updatetScorpiusParameters", "run Scorpius", width = '80%', 
+                            style = "color: #fff; background-color: #A00272; border-color: #2e6da4")
         )
       ),
-      fluidRow(      
-        column(
-        3,
-        numericInput(
-          "scorpRepeat",
-          label = "number of permutations for random forrest",
-          min = 1, max = 100, step = 1,
-          value = 3
+      fluidRow(
+        column(width = 4,
+               selectInput("dimScorpiusX",
+                           label = "Component 1",
+                           choices = c("tsne1", "tsne2", "tsne3"),
+                           selected = "tsne1"
+               ),
+               numericInput("scorpRepeat",
+                            label = "number of permutations for random forrest",
+                            min = 1, max = 100, step = 1,
+                            value = 3
+               )
+        ),
+        column(width = 4,
+               selectInput("dimScorpiusY",
+                           label = "Component 2",
+                           choices = c("tsne1", "tsne2", "tsne3"),
+                           selected = "tsne2"
+               ),
+               numericInput("scorpMaxGenes",
+                            label = "max number of Genes",
+                            min = 200, max = 20000, step = 10,
+                            value = 500
+               )
+        ),
+        column(width = 4,
+               selectInput("dimScorpiusCol",
+                           label = "Color by",
+                           choices = c("sampleNames", "tsne1", "tsne2", "tsne3"),
+                           selected = "sampleNames"
+               ),
+               fileInput("trajInputFile",
+                         "Choose .csv file with trajectory informaiton",
+                         accept = c(
+                           ".csv",
+                           "text/comma-separated-values",
+                           "text/tab-separated-values",
+                           "text/plain",
+                           ".csv",
+                           ".tsv"
+                         )
+               )
+        )
+      ),
+      fluidRow(
+        column(width = 12,
+               plotOutput("scropius_trajectory_plot", height = "672px") 
+        )
+      ),
+      # tags$h3("Heatmap "),
+      fluidRow(
+        column(width = 12,
+               pHeatMapUI("scorpiusHeatmapPlotModule") %>% withSpinner()
+               # imageOutput('scorpiusHeatmapPlotModule', height = '672px') 
+        )
+      ),
+      fluidRow(
+        column(width = 10,
+               tableSelectionUi("scorpiusTableMod")
         )
       )
-      ),
-      fluidRow(column(
-        12,
-        tipify(
-          downloadButton("downLoadTraj", "Download trajectory"),
-          "<h3>download trajectory to csv file</h3>"
-        ), fileInput(
-          "trajInputFile",
-          "Choose .csv file with trajectory informaiton",
-          accept = c(
-            ".csv",
-            "text/comma-separated-values",
-            "text/tab-separated-values",
-            "text/plain",
-            ".csv",
-            ".tsv"
-          )
-        )
-      )),
-      fluidRow(column(
-        12,
-        plotOutput("scropius_trajectory_plot", height = "672px") # %>% withSpinner()
-      )),
-      # tags$h3("Heatmap "),
-      fluidRow(column(
-        12,
-        pHeatMapUI("scorpiusHeatmapPlotModule") %>% withSpinner()
-        # imageOutput('scorpiusHeatmapPlotModule', height = '672px') #%>% withSpinner()
-      )),
-      tags$h3("table"),
-      fluidRow(column(
-        10,
-        offset = 1,
-        tableSelectionUi("scorpiusTableMod")
-      ))
-    ),
-  elpiTab = tabItem(
+    )
+  ),
+  tabItem(
     "elpiGraphTab",
     tags$h3("trajectory by ElpiGraph"),
     fluidRow(column(12,
-      offset = 1,
-      checkboxInput("elpiCalc", "calculate", FALSE)
+                    offset = 1,
+                    checkboxInput("elpiCalc", "calculate", FALSE)
     )),
     fluidRow(
       column(

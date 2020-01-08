@@ -14,13 +14,13 @@ observeEvent(input$scorpiusCalc,{
   isolate(scorpiusTrajectory())
 })
 
-observe({
+observe(label = "ob1", {
   .schnappsEnv$dimScorpiusX <- input$dimScorpiusX
   .schnappsEnv$dimScorpiusY <- input$dimScorpiusY
   .schnappsEnv$dimScorpiusCol <- input$dimScorpiusCol
 })
 # updateScorpiusInput <- reactive({
-observe({
+observe(label = "ob2", {
   tsneData <- projections()
   
   # Can use character(0) to remove all choices
@@ -56,67 +56,67 @@ observe({
   # )
 })
 # elpi observers ----
-observe({
+observe(label = "ob3", {
   if (DEBUG) cat(file = stderr(), paste0("observe: dimElpi\n"))
   .schnappsEnv$dimElpi <- input$dimElpi
 })
-observe({
+observe(label = "ob4", {
   if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiX\n"))
   .schnappsEnv$dimElpiX <- input$dimElpiX
 })
-observe({
+observe(label = "ob5", {
   if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiY\n"))
   .schnappsEnv$dimElpiY <- input$dimElpiY
 })
-observe({
+observe(label = "ob6", {
   if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiCol\n"))
   .schnappsEnv$dimElpiCol <- input$dimElpiCol
 })
-observe({
+observe(label = "ob7", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpiSeed\n"))
   .schnappsEnv$elpiSeed <- input$elpiSeed
 })
-observe({
+observe(label = "ob8", {
   if (DEBUG) cat(file = stderr(), paste0("observe: ElpiMethod\n"))
   .schnappsEnv$ElpiMethod <- input$ElpiMethod
 })
-observe({
+observe(label = "ob9", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpiNumNodes\n"))
   .schnappsEnv$elpiNumNodes <- input$elpiNumNodes
 })
-observe({
+observe(label = "ob10", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpinReps\n"))
   .schnappsEnv$elpinReps <- input$elpinReps
 })
-observe({
+observe(label = "ob11", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpiProbPoint\n"))
   .schnappsEnv$elpiProbPoint <- input$elpiProbPoint
 })
-observe({
+observe(label = "ob12", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpiStartNode\n"))
   .schnappsEnv$elpiStartNode <- input$elpiStartNode
 })
-observe({
+observe(label = "ob13", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpiEndNode\n"))
   .schnappsEnv$elpiEndNode <- input$elpiEndNode
 })
-observe({
+observe(label = "ob14", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpi_num_permutations\n"))
   .schnappsEnv$elpi_num_permutations <- input$elpi_num_permutations
 })
-observe({
+observe(label = "ob15", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpi_ntree\n"))
   .schnappsEnv$elpi_ntree <- input$elpi_ntree
 })
-observe({
+observe(label = "ob16", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpi_ntree_perm\n"))
   .schnappsEnv$elpi_ntree_perm <- input$elpi_ntree_perm
 })
-observe({
+observe(label = "ob17", {
   if (DEBUG) cat(file = stderr(), paste0("observe: elpi_nGenes\n"))
   .schnappsEnv$elpi_nGenes <- input$elpi_nGenes
 })
-observe({
+observe(label = "ob18", {
   endpoints <- traj_endpoints()
   
   # browser()
@@ -146,7 +146,7 @@ observe({
 })
 
 
-observe({
+observe(label = "ob19", {
   projections <- projections()
   
   # Can use character(0) to remove all choices
@@ -201,7 +201,7 @@ observe({
 })
 # observeProj ----
 # update projections
-observe({
+observe(label = "ob20", {
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "observeProj")
@@ -369,7 +369,18 @@ callModule(
 output$downLoadTraj <- downloadHandler(
   filename = paste0("scorpiusTraj.", Sys.Date(), ".csv"),
   content = function(file) {
-    if (DEBUG) cat(file = stderr(), paste("downLoadTraj: \n"))
+    if (DEBUG) cat(file = stderr(), "downLoadTraj started.\n")
+    start.time <- base::Sys.time()
+    on.exit({
+      printTimeEnd(start.time, "downLoadTraj")
+      if (!is.null(getDefaultReactiveDomain())) {
+        removeNotification(id = "downLoadTraj")
+      }
+    })
+    if (!is.null(getDefaultReactiveDomain())) {
+      showNotification("downLoadTraj", id = "downLoadTraj", duration = NULL)
+    }
+    
     traj <- scorpiusTrajectory()
     if (is.null(traj)) {
       return(NULL)

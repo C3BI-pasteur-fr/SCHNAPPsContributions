@@ -4,6 +4,20 @@ require(ggalluvial)
 # Alluvial plot of two factors
 output$alluvial_plot <- renderPlot({
   # load reactive data
+  if (DEBUG) {
+    cat(file = stderr(), "alluvial_plot started.\n")
+  }
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "alluvial_plot")
+    if (!is.null(getDefaultReactiveDomain())) {
+      removeNotification(id = "alluvial_plot")
+    }
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("alluvial_plot", id = "alluvial_plot", duration = NULL)
+  }
+  
   projections <- projections()
   alluiv1 <- input$alluiv1
   alluiv2 <- input$alluiv2

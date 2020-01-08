@@ -77,7 +77,7 @@ tabList <- list(
       # tags$h3("Heatmap "),
       fluidRow(
         column(width = 12,
-               pHeatMapUI("scorpiusHeatmapPlotModule") %>% withSpinner()
+               pHeatMapUI("scorpiusHeatmapPlotModule") # %>% withSpinner()
                # imageOutput('scorpiusHeatmapPlotModule', height = '672px') 
         )
       ),

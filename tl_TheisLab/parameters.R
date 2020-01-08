@@ -89,6 +89,8 @@ dca_impute <- reactive({
   x <- uniqTsparse(assays(scEx_bcnorm)[[1]])
   scalingFactor = 1000
   slot(x, "x") <- log(1 + slot(x, "x"), base = 2) * scalingFactor
+  
+  addClass("updateNormalization", "green")
   assays(scEx_bcnorm)[[1]] <- x
   return(scEx_bcnorm)
 

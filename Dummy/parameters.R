@@ -59,7 +59,8 @@ Dummy_Normalization <- reactive({
 # normalization process
   retVal <- Dummy_NormalizationFunc(scEx = scEx)
 # end of normalization. 
-   
+  
+  addClass("updateNormalization", "green")
   printTimeEnd(start.time, "Dummy_Normalization")
   exportTestValues(Dummy_Normalization = {assays(retVal)[["logcounts"]]})  
   return(retVal)
@@ -67,16 +68,7 @@ Dummy_Normalization <- reactive({
 
 
 Dummy_NormalizationFunc <- function(scEx, scalingFactor = 10000){
-  bc_sums <- Matrix::colSums((assays(scEx)[["counts"]]>0)*1)
-  A <- as(assays(scEx)[["counts"]], "dgCMatrix")
-  A@x <- A@x / bc_sums[assays(scEx)[["counts"]]@j + 1L]
-  scEx_bcnorm <- SingleCellExperiment(assay = list(logcounts = as(A,"dgTMatrix")),
-                                      colData = colData(scEx),
-                                      rowData = rowData(scEx))
+  names(assays(scEx)) <- "logcounts"
   
-  x <- uniqTsparse(assays(scEx_bcnorm)[[1]])
-  rownames(x) = rownames(scEx)
-  slot(x, "x") <- slot(x, "x") * scalingFactor
-  assays(scEx_bcnorm)[[1]] <- x
-  return(scEx_bcnorm)
+  return(scEx)
 }

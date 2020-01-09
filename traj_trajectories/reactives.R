@@ -141,6 +141,7 @@ scorpiusInput <- reactive({
 })
 
 # scorpiusSpace ----
+# 2D space in which trajectory is calculated
 # return projections or loaded space.
 scorpiusSpace <- reactive({
   if (DEBUG) cat(file = stderr(), "scorpiusSpace started.\n")
@@ -174,6 +175,7 @@ scorpiusSpace <- reactive({
   # load(file="~/SCHNAPPsDebug/scorpiusSpace.RData")
   
   space <- projections[, c(dimX, dimY)]
+  
   return(space)
 })
 
@@ -192,6 +194,9 @@ scorpiusTrajectory <- reactive({
     showNotification("scorpiusTrajectory", id = "scorpiusTrajectory", duration = NULL)
   }
   
+  # only execute if button is pressed
+  clicked = input$updatetScorpiusParameters
+  cat(file = stderr(), paste("scorpiusTrajectory clicked:", clicked,"\n"))
   # create dependancy on button and return if not pressed once
   if (input$updatetScorpiusParameters == 0) {
     return(NULL)
@@ -205,7 +210,7 @@ scorpiusTrajectory <- reactive({
   if (!is.null(scInput)) {
     return(scInput)
   }
-  if (is.null(space) | is.null(space)) {
+  if (is.null(space)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusTrajectory:NULL\n"))
     return(NULL)
   }
@@ -223,6 +228,18 @@ scorpiusTrajectory <- reactive({
   traj$path = traj$path[order(traj$path$idx),]
   traj$path = traj$path[, -3]
   # rownames(traj$path) == names(traj$time)
+  
+  setRedGreenButton(
+    vars = list(
+      c("scorpDimX", scorpiuseParameters$dimX),
+      c("scorpDimY", scorpiuseParameters$dimY),
+      c("scorpMaxGenes", isolate(input$scorpMaxGenes)),
+      c("scorpRepeat", isolate(input$scorpRepeat)),
+      c("scorpInFile", isolate(input$trajInputFile))
+    ),
+    button = "updatetScorpiusParameters"
+  )
+  
   return(traj$path)
 })
 
@@ -404,9 +421,9 @@ elpiTreeData <- reactive({
     cat(file = stderr(), "elpiTreeData\n")
   }
   
-  dimElpi <- input$dimElpi
   scEx <- scEx()
   projections <- projections()
+  dimElpi <- isolate(input$dimElpi)
   dim1 <- input$dimElpiX
   dim2 <- input$dimElpiY
   if (is.null(scEx)) {
@@ -780,19 +797,19 @@ elpiGraphCompute <- reactive({
     cat(file = stderr(), "elpiGraphCompute\n")
   }
   
-  nReps <- input$elpinReps # 1-50
-  NumNodes <- input$elpiNumNodes # 10 - 100
-  ProbPoint <- input$elpiProbPoint # 0.1-1.0
-  method <- input$ElpiMethod
-  tree_data <- elpiTreeData()
-  
   doCalc <- input$elpiCalc
-  dimUse <-  input$dimElpi
-  seed <- input$elpiSeed
+  tree_data <- isolate(elpiTreeData())
+
+  nReps <- isolate(input$elpinReps) # 1-50
+  NumNodes <- isolate(input$elpiNumNodes) # 10 - 100
+  ProbPoint <- isolate(input$elpiProbPoint) # 0.1-1.0
+  method <- isolate(input$ElpiMethod)
+  dimUse <-  isolate(input$dimElpi)
+  seed <- isolate(input$elpiSeed)
   
   require(parallel)
   
-  if (!doCalc | is.null(tree_data)) {
+  if (is.null(tree_data)) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -842,6 +859,20 @@ elpiGraphCompute <- reactive({
   #               retVal = cep,
   #               status = "finished",
   #               message = "")
+  setRedGreenButton(
+    vars = list(
+      c("elpinReps", isolate(input$elpinReps)),
+      c("elpiNumNodes", isolate(input$elpiNumNodes)),
+      c("elpiProbPoint", isolate(input$elpiProbPoint)),
+      c("ElpiMethod", isolate(input$ElpiMethod)),
+      c("dimElpi", isolate(input$dimElpi)),
+      c("elpiSeed", isolate(input$elpiSeed)),
+      c("dimElpi", isolate(input$dimElpi)),
+      c("dimElpiX", isolate(input$dimElpiX)),
+      c("dimElpiY", isolate(input$dimElpiY))
+    ),
+    button = "elpiCalc"
+  )
   
   return(cep)
 })

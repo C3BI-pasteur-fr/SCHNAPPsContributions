@@ -70,7 +70,7 @@ tabList <- list(
       fluidRow(
         column(
           width = 12,
-          plotOutput("scropius_trajectory_plot", height = "672px")
+          jqui_resizable(plotOutput("scropius_trajectory_plot", height = "672px"))
         )
       ),
       br(),
@@ -100,7 +100,7 @@ tabList <- list(
   tabItem(
     "elpiGraphTab",
     box(
-      title = "Scorpius trajectory inference", solidHeader = TRUE, width = 12, status = "primary",
+      title = "ElpiGraph trajectory inference", solidHeader = TRUE, width = 12, status = "primary",
       # tags$h3("trajectory by ElpiGraph"),
       # fluidRow(column(12,
       #                 offset = 1,
@@ -197,7 +197,7 @@ tabList <- list(
       ),
       fluidRow(column(
         12,
-        plotOutput("elpi_plot", height = "672px") # %>% withSpinner()
+        jqui_resizable(plotOutput("elpi_plot", height = "672px")) # %>% withSpinner()
       )),
       br(),
       fluidRow(

@@ -113,11 +113,11 @@ observe(label = "ob11", {
   .schnappsEnv$elpiProbPoint <- input$elpiProbPoint
 })
 observe(label = "ob12", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpiStartNode\n"))
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpiStartNode", input$elpiStartNode, "\n"))
   .schnappsEnv$elpiStartNode <- input$elpiStartNode
 })
 observe(label = "ob13", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpiEndNode\n"))
+  if (DEBUG) cat(file = stderr(), paste0("observe: elpiEndNode:", input$elpiEndNode,"\n"))
   .schnappsEnv$elpiEndNode <- input$elpiEndNode
 })
 observe(label = "ob14", {
@@ -153,6 +153,8 @@ observe(label = "ob18", {
   ) {
     return(NULL)
   }
+  if (DEBUG) cat(file = stderr(), "observeProj 18 started.\n")
+  
   .schnappsEnv$elpiEndpoints <- endpoints
   # Can also set the label and select items
   updateSelectInput(session,
@@ -175,6 +177,7 @@ observe(label = "ob19", {
   if (is.null(projections)) {
     return(NULL)
   }
+  if (DEBUG) cat(file = stderr(), "observeProj 19 started.\n")
   
   # Can also set the label and select items
   updateSelectInput(session, "dimElpiX",
@@ -234,7 +237,7 @@ observe(label = "ob20", {
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("observeProj", id = "observeProj", duration = NULL)
   }
-  if (DEBUG) cat(file = stderr(), "observeProj started.\n")
+  if (DEBUG) cat(file = stderr(), "observeProj 20 started.\n")
   
   startNode <- input$elpiStartNode
   endNode <- input$elpiEndNode
@@ -277,6 +280,29 @@ observe(label = "ob20", {
   }
 })
 
+# set scorpiuseParameters on button pressed----
+observeEvent(input$updatetScorpiusParameters,{
+  # only react on this value
+  cat(file = stderr(), paste("hit button\n"))
+  scorpiuseParameters$dimX = isolate(input$dimScorpiusX)
+  scorpiuseParameters$dimY = isolate(input$dimScorpiusY)
+  scorpiuseParameters$scInput = isolate(scorpiusInput())
+  scorpiuseParameters$scorpMaxGenes = isolate(input$scorpMaxGenes)
+  scorpiuseParameters$scorpRepeat = isolate(input$scorpRepeat)
+  
+  setRedGreenButton(
+    vars = list(
+      c("scorpDimX", scorpiuseParameters$dimX),
+      c("scorpDimY", scorpiuseParameters$dimY),
+      c("scorpMaxGenes", isolate(input$scorpMaxGenes)),
+      c("scorpRepeat", isolate(input$scorpRepeat)),
+      c("scorpInFile", isolate(input$trajInputFile))
+    ),
+    button = "updatetScorpiusParameters"
+  )
+  
+})
+
 
 # scropius_trajectory_plot ----
 # The output type has to be in line with the tablist item. I.e. plotOutput in this case
@@ -306,9 +332,9 @@ output$scropius_trajectory_plot <- renderPlot({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scropius_trajectory_plot.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scropius_trajectory_plot.RData", list = c(".schnappsEnv", ls(), ls(envir = globalenv())))
   }
-  # load(file="~/SCHNAPPsDebug/scropius_trajectory_plot.RData")
+  # cp =load(file="~/SCHNAPPsDebug/scropius_trajectory_plot.RData")
   
   vChanged = valuesChanged(parameters = c(
     "scorpDimX", "scorpDimY",
@@ -349,6 +375,7 @@ scorpiusHeatmapPlotReactive <- reactive({
   }
   
   # upI <- updateScorpiusInput() # needed to update input
+  scEx = scEx()
   projections <- isolate(projections())
   traj <- scorpiusTrajectory()
   expr_sel <- scorpiusExpSel()
@@ -380,9 +407,11 @@ scorpiusHeatmapPlotReactive <- reactive({
   
   outfile <- paste0(tempdir(), "/heatmapScorpius", base::sample(1:10000, 1), ".png")
   cat(file = stderr(), paste("saving to: ", outfile, "\n"))
-  
+  colnames(expr_sel$expr_sel) = rowData(scEx[colnames(expr_sel$expr_sel),])$symbol
   # modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = F)
-  retVal <- drawTrajectoryHeatmap(expr_sel$expr_sel, traj$time, projections[rownames(expr_sel$expr_sel), dimCol], modules,
+  retVal <- drawTrajectoryHeatmap(x = expr_sel$expr_sel, time = traj$time, 
+                                  progression_group = projections[rownames(expr_sel$expr_sel), dimCol], modules = modules,
+                                  show_labels_row = TRUE, show_labels_col = FALSE,scale_features = TRUE,
                                   filename = normalizePath(outfile, mustWork = FALSE)
   )
   
@@ -470,20 +499,21 @@ elpiHeatmapPlotReactive <- reactive({
   }
   
   # upI <- updateScorpiusInput() # needed to update input
+  scEx = scEx()
+  clicked <- input$elpiCalc
   projections <- projections()
   psTime <- traj_getPseudotime()
   expr_sel <- traj_elpi_gimp()
   modules <- traj_elpi_modules()
   
   dimCol <- isolate(input$dimElpiCol)
-  doCalc <- isolate(input$elpiCalc)
   pixelratio <- session$clientData$pixelratio
   width <- session$clientData$output_plot_width
   height <- session$clientData$output_plot_height
   
   
   
-  if (!doCalc | is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(psTime)) {
+  if (is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(psTime)) {
     if (.schnappsEnv$DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
     return(NULL)
   }
@@ -499,14 +529,16 @@ elpiHeatmapPlotReactive <- reactive({
   if (is.null(height)) {
     height <- 96 * 7
   }
+  colnames(expr_sel$expr_sel) = rowData(scEx[colnames(expr_sel$expr_sel),])$symbol
   
   outfile <- paste0(tempdir(), "/heatmapScorpius", base::sample(1:10000, 1), ".png")
   cat(file = stderr(), paste("saving to: ", outfile, "\n"))
-  
+  outfile = NULL
   pst <- psTime$Pt[which(!is.na(psTime$Pt))]
   # modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = F)
-  retVal <- drawTrajectoryHeatmap(expr_sel$expr_sel,
-                                  time = pst, projections[rownames(expr_sel$expr_sel), dimCol], modules,
+  retVal <- drawTrajectoryHeatmap(x =expr_sel$expr_sel,
+                                  time = pst, progression_group = projections[rownames(expr_sel$expr_sel), dimCol], 
+                                  modules = modules, show_labels_col = FALSE, show_labels_row = TRUE,
                                   filename = normalizePath(outfile, mustWork = FALSE)
   )
   
@@ -584,13 +616,13 @@ output$elpi_plot <- renderPlot({
   cep <- elpiGraphCompute()
   PointLabel <- elpiPointLabel()
   projections <- projections()
-  dimX <- isolate(input$dimElpiX)
-  dimY <- isolate(input$dimElpiY)
-  dimCol <- isolate(input$dimElpiCol)
+  dimX <- input$dimElpiX
+  dimY <- input$dimElpiY
+  dimCol <- input$dimElpiCol
   
   vChanged = valuesChanged(parameters = c(
     "elpinReps","elpiNumNodes","elpiProbPoint","ElpiMethod",
-    "dimElpi","elpiSeed","dimElpi","dimElpiX","dimElpiY"
+    "elpiSeed","dimElpi","dimElpiX","dimElpiY"
   ))
   
   
@@ -624,7 +656,8 @@ output$elpi_plot <- renderPlot({
   p <- PlotPG(
     X = tree_data, TargetPG = cep[[length(cep)]],
     NodeLabels = NodeLabs,
-    LabMult = 5, PointSize = NA, p.alpha = .1
+    LabMult = 5, PointSize = NA, p.alpha = .5,
+    GroupsLab = projections[rownames(tree_data),dimCol]
   )
   
   

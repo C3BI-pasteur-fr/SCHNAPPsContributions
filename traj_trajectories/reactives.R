@@ -145,11 +145,11 @@ scorpiusSpace <- reactive({
   }
   
   
-  projections <- isolate(projections())
   # doCalc <- input$scorpiusCalc
   dimX <- scorpiuseParameters$dimX
   dimY <- scorpiuseParameters$dimY
   scInput <- scorpiuseParameters$scInput
+  projections <- projections()
   
   if (!is.null(scInput)) {
     return(scInput[, c(1, 2)])
@@ -191,11 +191,15 @@ scorpiusTrajectory <- reactive({
     return(NULL)
   }
   
-  space <- isolate(scorpiusSpace())
+  space <- scorpiusSpace()
   # doCalc <- input$scorpiusCalc
-  scInput <- isolate(scorpiusInput())
+  scInput <- scorpiusInput()
   
   
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/scorpiusTrajectory.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/scorpiusTrajectory.RData")
   if (!is.null(scInput)) {
     return(scInput)
   }
@@ -203,10 +207,10 @@ scorpiusTrajectory <- reactive({
     if (DEBUG) cat(file = stderr(), paste("scorpiusTrajectory:NULL\n"))
     return(NULL)
   }
-  if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scorpiusTrajectory.RData", list = c(ls(), ls(envir = globalenv())))
+  if (nrow(space)<10 | ncol(space)<2) {
+    if (DEBUG) cat(file = stderr(), paste("scorpiusTrajectory:NULL; need more samples/columns\n"))
+    return(NULL)
   }
-  # load(file="~/SCHNAPPsDebug/scorpiusTrajectory.RData")
   require(SCORPIUS)
   traj <- SCORPIUS::infer_trajectory(space)
   traj$path = data.frame(traj$path)

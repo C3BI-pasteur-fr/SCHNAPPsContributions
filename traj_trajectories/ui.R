@@ -151,7 +151,7 @@ tabList <- list(
             "dimElpi",
             label = "Dimensions to use",
             choices = c("elpiPCA", "components"),
-            selected = "elpiPCA"
+            selected = "components"
           )
         ),
         column(

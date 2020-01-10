@@ -10,9 +10,58 @@ library(dplyr)
 
 
 
-# observeEvent(input$scorpiusCalc,{
-#   isolate(scorpiusTrajectory())
-# })
+# observe scorpius Proj ----
+# update projections: add new projections
+observe(label = "ob20sc", {
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "observeScorpiusProj")
+    if (!is.null(getDefaultReactiveDomain())) {
+      removeNotification(id = "observeScorpiusProj")
+    }
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("observeScorpiusProj", id = "observeScorpiusProj", duration = NULL)
+  }
+  if (DEBUG) cat(file = stderr(), "observeScorpiusProj 20sc started.\n")
+  
+  traj <- scorpiusTrajectory()
+  scEx_log <- scEx_log()
+  isolate({
+    prjs <- sessionProjections$prjs
+  })
+  
+  if (is.null(scEx_log) || is.null(traj)) {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/observeScorpiusProj.RData", list = c(ls(), ls(envir = globalenv())))
+  }
+  # load(file="~/SCHNAPPsDebug/observeScorpiusProj.RData")
+  cn <- "traj_scorpius"
+  # if (cn %in% colnames(prjs)) {
+  #   return(NULL)
+  # }
+  # browser()
+  if (ncol(prjs) > 0) {
+    # make sure we are working with the correct cells. This might change when cells were removed.
+    prjs <- prjs[colnames(scEx_log), , drop = FALSE]
+    # didn't find a way to easily overwrite columns
+    
+    if (cn %in% colnames(prjs)) {
+      prjs[, cn] <- traj$time
+    } else {
+      prjs <- base::cbind(prjs, traj$time, deparse.level = 0)
+      colnames(prjs)[ncol(prjs)] <- cn
+    }
+    sessionProjections$prjs <- prjs
+  } else {
+    prjs <- data.frame(cn = traj$time)
+    rownames(prjs) <- colnames(scEx_log)
+    colnames(prjs)[ncol(prjs)] <- cn
+    sessionProjections$prjs <- prjs
+  }
+})
 
 observe(label = "ob_scorpButton",
         {
@@ -284,6 +333,7 @@ observe(label = "ob20", {
 observeEvent(input$updatetScorpiusParameters,{
   # only react on this value
   cat(file = stderr(), paste("hit button\n"))
+  input$updatetScorpiusParameters
   scorpiuseParameters$dimX = isolate(input$dimScorpiusX)
   scorpiuseParameters$dimY = isolate(input$dimScorpiusY)
   scorpiuseParameters$scInput = isolate(scorpiusInput())
@@ -329,6 +379,7 @@ output$scropius_trajectory_plot <- renderPlot({
   # doCalc <- input$scorpiusCalc
   
   if (is.null(projections) ) {
+    if (DEBUG) cat(file = stderr(), "scropius_trajectory_plot:NULL\n")
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -455,14 +506,12 @@ output$downLoadTraj <- downloadHandler(
 )
 
 
-# --------------------------
-# Elpi Graph
-# --------------------------
+# Elpi Graph -----
 
 # obeserver for elpi button ----
 # observe: cellNameTable_rows_selected ----
-observe(label = "ob_tsneParams", {
-  if (DEBUG) cat(file = stderr(), "observe tsneVars\n")
+observe(label = "ob_elpiCalcParams", {
+  if (DEBUG) cat(file = stderr(), "observe elpiCalc\n")
   input$elpiCalc
   setRedGreenButtonCurrent(
     vars = list(

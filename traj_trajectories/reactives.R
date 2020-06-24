@@ -421,6 +421,11 @@ elpiTreeData <- reactive({
   if (dimElpi == "elpiPCA") {
     return(t(as.matrix(assays(scEx)[[1]])))
   }
+  if (!all(c(dim1, dim2) %in% colnames(projections))){
+    cat(file = stderr(), paste("--- dims not in projctions: NULL:", c(dim1, dim2), "\n"))
+    return(NULL)
+    
+  }
   if (dimElpi == "components") {
     return(as.matrix(projections[,c(dim1,dim2)]))
   }

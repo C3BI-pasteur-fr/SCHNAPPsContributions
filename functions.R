@@ -1,3 +1,5 @@
+# modified version of Read10X_h5 from Seurat to include the sample name in the barcode
+
 readH5 <- function(filename, use.names = TRUE, unique.features = TRUE, sampleName = "1") {
   if (!requireNamespace("hdf5r", quietly = TRUE)) {
     stop("Please install hdf5r to read HDF5 files")

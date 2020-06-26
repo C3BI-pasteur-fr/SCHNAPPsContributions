@@ -77,7 +77,11 @@ cellIdReactive <- reactive({
   )
   
   # return the singleCellExperiment object with the redudced dimensions
-  scEx_log
+  retVal <- scEx_log
+  exportTestValues(cellIdReactive = {
+    retVal
+  })
+  retVal
 })
 
 cellID_cellTableReact <- reactive({
@@ -103,7 +107,11 @@ cellID_cellTableReact <- reactive({
   }
   # cp = load(file="~/SCHNAPPsDebug/cellID_cellTableReact.RData")
   
-  as.data.frame(reducedDim(mca, "MCA"))
+  retVal <- as.data.frame(reducedDim(mca, "MCA"))
+  exportTestValues(cellID_cellTableReact = {
+    retVal
+  })
+  retVal
 })
 
 cellID_geneTableReact <- reactive({
@@ -129,7 +137,12 @@ cellID_geneTableReact <- reactive({
   }
   # cp = load(file="~/SCHNAPPsDebug/cellID_geneTableReact.RData")
   
-  as.data.frame(attr(reducedDim(mca, "MCA"), "genesCoordinates"))
+  retVal <- as.data.frame(attr(reducedDim(mca, "MCA"), "genesCoordinates"))
+  exportTestValues(cellID_geneTableReact = {
+    retVal
+  })
+  retVal
+  
 })
 
 
@@ -156,7 +169,11 @@ cellID_stdevTableReact <- reactive({
   }
   # cp = load(file="~/SCHNAPPsDebug/cellID_stdevTableReact.RData")
   
-  data.frame(stdev = attr(reducedDim(mca, "MCA"), "stdev"))
+  retVal = data.frame(stdev = attr(reducedDim(mca, "MCA"), "stdev")) 
+  exportTestValues(cellID_stdevTableReact = {
+    retVal
+  })
+  retVal
 })
 
 
@@ -196,7 +213,12 @@ cellIDGeneSetReact <- reactive({
     resFrame[ names(res[[li]]),names(res[li])] = res[[li]]
   }
   # Just print text with the names
-  resFrame
+  retVal <- resFrame
+  exportTestValues(cellIDGeneSetReact = {
+    retVal
+  })
+  retVal
+  
 })
 
 

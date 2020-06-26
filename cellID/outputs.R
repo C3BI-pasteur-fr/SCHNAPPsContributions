@@ -90,7 +90,9 @@ output$cellID_stdev <- renderPlot({
   df <- data.frame(stdev = attr(reducedDim(mca, "MCA"), "stdev"))
   df$component <- as.numeric(rownames(df))
   retVal <- ggplot(data = df,aes(x=component, y=stdev)) + geom_bar(stat = "identity")  
-  .schnappsEnv[["cellID_stdev"]] <- retVal
+  exportTestValues(cellID_stdev = {
+    retVal
+  })
   return(retVal)
   # barplot(pca$var_pcs, main = "Variance captured by first PCs")
 })

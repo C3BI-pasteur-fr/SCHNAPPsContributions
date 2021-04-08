@@ -960,7 +960,11 @@ temporaImport <- reactive({
   # TODO
   # should be a variable, here we are forcing symbol but could be anything.
   rownames(scEx_log) = rowData(scEx_log)[rownames(scEx_log), "symbol"]
-  
+  # tempora hack 
+  suppressMessages(
+    setMethod("getMD","SingleCellExperiment",
+              function(x) data.frame(SingleCellExperiment::colData(x)))
+  )
   temporaObj <- ImportSeuratObject(seuratobj = scEx_log, 
                                        assayType = "logcounts",
                                        clusters = tCluster,

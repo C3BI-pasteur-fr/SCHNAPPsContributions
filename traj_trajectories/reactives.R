@@ -1,4 +1,5 @@
 require(ElPiGraph.R)
+require(Tempora)
 
 # retVal <- drawTrajectoryHeatmap(x=expr_sel, time=traj$time, progression_group=projections[, dimCol], modules,
 #                                 filename = normalizePath(outfile, mustWork = FALSE)
@@ -111,7 +112,7 @@ scorpiusInput <- reactive({
   inFile <- input$trajInputFile
   
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scorpiusInput.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scorpiusInput.RData", list = c(ls()))
   }
   # cp = load(file="~/SCHNAPPsDebug/scorpiusInput.RData")
   if (is.null(inFile)) {
@@ -159,7 +160,7 @@ scorpiusSpace <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scorpiusSpace.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scorpiusSpace.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusSpace.RData")
   
@@ -197,7 +198,7 @@ scorpiusTrajectory <- reactive({
   
   
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scorpiusTrajectory.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scorpiusTrajectory.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusTrajectory.RData")
   if (!is.null(scInput)) {
@@ -261,7 +262,7 @@ scorpiusExpSel <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scorpiusExpSel.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scorpiusExpSel.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusExpSel.RData")
   cellsNotFound <- colnames(assays(scEx_log)[[1]])[!colnames(assays(scEx_log)[[1]]) %in% rownames(traj)]
@@ -297,8 +298,8 @@ scorpiusModules <- reactive({
   if (input$updatetScorpiusParameters == 0) {
     return(NULL)
   }
-
-    # browser()
+  
+  # browser()
   scEx_log <- isolate(scEx_log())
   # projections = projections()
   # space <- scorpiusSpace()
@@ -317,7 +318,7 @@ scorpiusModules <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scorpiusModules.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scorpiusModules.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusModules.RData")
   
@@ -374,7 +375,7 @@ scorpiusModulesTable <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/scorpiusModulesTable.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/scorpiusModulesTable.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusModulesTable.RData")
   # space = projections[,c(dimX, dimY)]
@@ -450,7 +451,7 @@ traj_endpoints <- reactive({
   clicked <- input$elpiCalc
   TreeEPG <- elpiGraphCompute()
   scEx_log <- scEx_log()
-
+  
   projections <- isolate(projections())
   elpimode <- isolate(input$ElpiMethod)
   seed <- isolate(input$elpiSeed)
@@ -460,7 +461,7 @@ traj_endpoints <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/traj_endpoints.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/traj_endpoints.RData", list = c(ls()))
   }
   # cp = load(file="~/SCHNAPPsDebug/traj_endpoints.RData")
   set.seed(seed = seed)
@@ -502,10 +503,10 @@ traj_getPseudotime <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/traj_getPseudotime.RData", list = c(ls()))
   }
   # cp =load(file="~/SCHNAPPsDebug/good/traj_getPseudotime.RData")
-
+  
   set.seed(seed)
   # computing a Partition structure
   PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions)
@@ -558,7 +559,7 @@ traj_elpi_modules <- reactive({
     showNotification("traj_elpi_modules", id = "traj_elpi_modules", duration = NULL)
   }
   if (DEBUG) cat(file = stderr(), "traj_elpi_modules started.\n")
-
+  
   clicked <- input$elpiCalc
   scEx_log <- scEx_log()
   TreeEPG <- elpiGraphCompute()
@@ -579,7 +580,7 @@ traj_elpi_modules <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/traj_elpi_modules.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/traj_elpi_modules.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/traj_elpi_modules.RData")
   
@@ -629,7 +630,7 @@ traj_elpi_gimp <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/traj_elpi_gimp.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/traj_elpi_gimp.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/traj_elpi_gimp.RData")
   
@@ -672,7 +673,7 @@ traj_elpi_gimp <- reactive({
 #     return(NULL)
 #   }
 #   if (.schnappsEnv$DEBUGSAVE) {
-#     save(file = "~/SCHNAPPsDebug/observeProj.RData", list = c(ls(), ls(envir = globalenv())))
+#     save(file = "~/SCHNAPPsDebug/observeProj.RData", list = c(ls()))
 #   }
 #   # load(file="~/SCHNAPPsDebug/observeProj.RData")
 #   cn = paste0("traj_", startNode, "_", endNode)
@@ -728,7 +729,7 @@ traj_tragetPath <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/traj_tragetPath.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/traj_tragetPath.RData", list = c(ls()))
   }
   # cp = load(file="~/SCHNAPPsDebug/traj_tragetPath.RData")
   set.seed(seed)
@@ -753,7 +754,7 @@ elpiGraphCompute <- reactive({
   
   clicked <- input$elpiCalc
   tree_data <- isolate(elpiTreeData())
-
+  
   nReps <- isolate(input$elpinReps) # 1-50
   NumNodes <- isolate(input$elpiNumNodes) # 10 - 100
   ProbPoint <- isolate(input$elpiProbPoint) # 0.1-1.0
@@ -793,8 +794,8 @@ elpiGraphCompute <- reactive({
     CenterData = elipCenter, 
     n.cores = detectCores() - 1
   ))
-
-    setRedGreenButton(
+  
+  setRedGreenButton(
     vars = list(
       c("elpinReps", isolate(input$elpinReps)),
       c("elpiNumNodes", isolate(input$elpiNumNodes)),
@@ -820,7 +821,7 @@ elpiGraphConstruct <- reactive({
   clicked <- input$elpiCalc
   cep <- elpiGraphCompute()
   tree_data <- elpiTreeData()
-
+  
   seed <- isolate(input$elpiSeed)
   
   if (is.null(cep)) {
@@ -854,7 +855,7 @@ elpiPointLabel <- reactive({
   if (DEBUG) {
     cat(file = stderr(), "elpiPointLabel\n")
   }
-
+  
   clicked <- input$elpiCalc
   elpiGraphConstruct <- elpiGraphConstruct()
   if (is.null(elpiGraphConstruct)) {
@@ -890,7 +891,7 @@ elpiModulesTable <- reactive({
     showNotification("elpiModulesTable", id = "elpiModulesTable", duration = NULL)
   }
   clicked <- input$elpiCalc
-
+  
   scEx_log <- isolate(scEx_log())
   traj <- traj_getPseudotime()
   expr_sel <- traj_elpi_gimp()
@@ -898,19 +899,318 @@ elpiModulesTable <- reactive({
   
   dimX <- isolate(input$dimElpiX)
   dimY <- isolate(input$dimElpiY)
-
+  
   if (is.null(scEx_log) | is.null(expr_sel)) {
     if (DEBUG) cat(file = stderr(), paste("elpiModulesTable:NULL\n"))
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/elpiModulesTable.RData", list = c(ls(), ls(envir = globalenv())))
+    save(file = "~/SCHNAPPsDebug/elpiModulesTable.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/elpiModulesTable.RData")
-
+  
   gene_selDF <- as.data.frame(expr_sel$gene_sel)
   rownames(gene_selDF) = gene_selDF[,1]
   gene_selDF = gene_selDF[,-1]
   return(cbind(modules,gene_selDF[modules$feature,]))
 })
 
+
+# temporaImport ----
+
+temporaImport <- reactive({
+  if (DEBUG) cat(file = stderr(), "temporaImport started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "temporaImport")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "temporaImport")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("temporaImport", id = "temporaImport", duration = NULL)
+  }
+  clicked <- input$updatetTemporaParameters
+  
+  scEx_log <- isolate(scEx_log())
+  projections <- isolate(projections())
+  tCluster <- isolate(input$temporaCluster)
+  tFactor <- isolate(input$temporaFactor)
+  tLevels <- isolate(input$temporaLevels)
+  
+  if (is.null(scEx_log) | is.null(projections)) {
+    if (DEBUG) cat(file = stderr(), paste("temporaImport:NULL\n"))
+    return(NULL)
+  }
+  
+ 
+  if (!all(c(tCluster,tFactor) %in% colnames(projections))){
+    if (DEBUG) cat(file = stderr(), paste("tCluster,tFactor:NULL\n"))
+    return(NULL)
+  }
+  if (!all(tLevels %in% levels(projections[,tFactor]))){
+    if (DEBUG) cat(file = stderr(), paste("tLevels:NULL\n"))
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/temporaImport.RData", list = c(ls()))
+  }
+  # load(file="~/SCHNAPPsDebug/temporaImport.RData")
+  colData(scEx_log) <- DataFrame(projections[rownames(colData(scEx_log)),])
+  # HACK
+  # TODO
+  # should be a variable, here we are forcing symbol but could be anything.
+  rownames(scEx_log) = rowData(scEx_log)[rownames(scEx_log), "symbol"]
+  
+  temporaObj <- ImportSeuratObject(seuratobj = scEx_log, 
+                                       assayType = "logcounts",
+                                       clusters = tCluster,
+                                       timepoints = tFactor,
+                                       timepoint_order = tLevels,
+                                       cluster_labels = levels(projections[,tCluster])
+  )
+  
+  return(temporaObj)
+})
+
+# temporaPWProfiles ----
+temporaPWProfiles <- reactive({
+  if (DEBUG) cat(file = stderr(), "temporaPWProfiles started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "temporaPWProfiles")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "temporaPWProfiles")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("temporaPWProfiles", id = "temporaPWProfiles", duration = NULL)
+  }
+  
+  temporaObj <- temporaImport()
+  
+  if(is.null(temporaObj)) {
+    if (DEBUG) cat(file = stderr(), paste("temporaPWProfiles:NULL\n"))
+    return(NULL)
+  }
+  
+  gmt_path = isolate(input$temporaGMTFile)
+  min.sz = isolate(input$temporaMinSz)
+  max.sz = isolate(input$temporaMaxSz)
+  
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/temporaPWProfiles.RData", list = c(ls()))
+  }
+  # load(file="~/SCHNAPPsDebug/temporaPWProfiles.RData")
+
+    if (!file.exists(gmt_path$datapath)) {
+    if (DEBUG) cat(file = stderr(), paste("gmt_path:NULL\n"))
+    return(NULL)
+  }
+  
+  good = tryCatch ({GSEABase::getGmt(gmt_path$datapath)},
+                   error = function(e) {
+                     cat(file = stderr(), "GSEABase::getGmt")
+                     if (!is.null(getDefaultReactiveDomain())) {
+                       showNotification("GSEABase::getGmt not a valid file", 
+                                        id = "temporaPWProfiles", type = "error", duration = NULL)
+                     }
+                     return(NULL)
+                   })
+  if(is.null(good)) {
+    if (DEBUG) cat(file = stderr(), paste("GSEABase::getGmt:NULL\n"))
+    return(NULL)
+  }
+  
+  temporaObj <- CalculatePWProfiles(temporaObj, 
+                                        gmt_path = gmt_path$datapath,
+                                        method="gsva", 
+                                        min.sz = min.sz, 
+                                        max.sz = max.sz, 
+                                       
+                                        parallel.sz = future::nbrOfWorkers())
+  
+  return(temporaObj)
+})
+
+# temporaTrajectory ----
+temporaTrajectory <- reactive({
+  if (DEBUG) cat(file = stderr(), "temporaTrajectory started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "temporaTrajectory")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "temporaTrajectory")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("temporaTrajectory", id = "temporaTrajectory", duration = NULL)
+  }
+  
+  temporaObj <- temporaPWProfiles()
+  
+  if(is.null(temporaObj)) {
+    if (DEBUG) cat(file = stderr(), paste("temporaTrajectory:NULL\n"))
+    return(NULL)
+  }
+  
+  n_pcs = isolate(input$temporaNPCs)
+  difference_threshold = isolate(input$temporaDiff_thresh)
+  
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/temporaTrajectory.RData", list = c(ls()))
+  }
+  # load(file="~/SCHNAPPsDebug/temporaTrajectory.RData")
+  temporaObj = tryCatch ({
+    BuildTrajectory(temporaObj, 
+                    n_pcs = n_pcs, 
+                    difference_threshold = difference_threshold)
+  },
+  error = function(e) {
+    cat(file = stderr(), "tempora BuildTrajectory")
+    if (!is.null(getDefaultReactiveDomain())) {
+      showNotification("tempora BuildTrajectory", 
+                       id = "temporaBuildTrajectory", type = "error", duration = NULL)
+    }
+    return(NULL)
+  })
+  
+  
+  return(temporaObj)
+})
+
+# temporaIdentifyVaryingPWs ----
+temporaIdentifyVaryingPWs <- reactive({
+  if (DEBUG) cat(file = stderr(), "temporaIdentifyVaryingPWs started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "temporaIdentifyVaryingPWs")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "temporaIdentifyVaryingPWs")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("temporaIdentifyVaryingPWs", id = "temporaIdentifyVaryingPWs", duration = NULL)
+  }
+  
+  
+  # create dependancy on button and return if not pressed once
+  if (input$updatetTemporaParameters == 0) {
+    return(NULL)
+  }
+  
+  temporaObj <- temporaTrajectory()
+  temporaPval_thresh <- input$temporaPval_thresh
+  if (is.null(temporaObj) ) {
+    if (DEBUG) cat(file = stderr(), paste("temporaIdentifyVaryingPWs:NULL\n"))
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/temporaIdentifyVaryingPWs.RData", list = c(ls()))
+  }
+  # load(file="~/SCHNAPPsDebug/temporaIdentifyVaryingPWs.RData")
+  
+  #Fit GAMs on pathway enrichment profile
+  temporaObj <- IdentifyVaryingPWs(temporaObj, pval_threshold = temporaPval_thresh)
+  return(temporaObj)
+})
+
+# temporaPvalModulesTable ----
+
+temporaPvalModulesTable <- reactive({
+  if (DEBUG) cat(file = stderr(), "temporaPvalModulesTable started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "temporaPvalModulesTable")
+    if (!is.null(getDefaultReactiveDomain()))
+      removeNotification(id = "temporaPvalModulesTable")
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("temporaPvalModulesTable", id = "temporaPvalModulesTable", duration = NULL)
+  }
+  
+  
+  # create dependancy on button and return if not pressed once
+  if (input$updatetTemporaParameters == 0) {
+    return(NULL)
+  }
+  
+  temporaObj <- temporaIdentifyVaryingPWs()
+
+  if (is.null(temporaObj) ) {
+    if (DEBUG) cat(file = stderr(), paste("temporaPvalModulesTable:NULL\n"))
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/temporaPvalModulesTable.RData", list = c(ls()))
+  }
+  # load(file="~/SCHNAPPsDebug/temporaPvalModulesTable.RData")
+  
+  outTable = data.frame(goTerm = names(temporaObj@varying.pws))
+  outTable$pValues = temporaObj@varying.pws
+ 
+  return(outTable)
+  
+})
+
+
+# tempora2DPlotFunc ----
+tempora2DPlotFunc <- function(temporaObj, projections, dimX, dimY, dimCol) {
+  require(ggnetwork)
+  require(ggplot2)
+  require(ggrepel)
+  require(network)
+  space <- projections[, c(dimX, dimY)]
+  require(SCORPIUS)
+  
+  
+  # temporaObj@cluster.metadata
+  
+  data = projections[,c(dimX, dimY, dimCol)]
+  mean.points <- aggregate(data[, 1:2], list(data[,3]), mean)
+  
+  # construct a network
+  nCl = length(levels(projections[,dimCol]))
+  net = matrix(0, nCl, nCl) 
+  rownames(net) = levels(projections[,dimCol])
+  colnames(net) = levels(projections[,dimCol])
+  temporaObj@trajectory$from = as.character( temporaObj@trajectory$from)
+  temporaObj@trajectory$to = as.character( temporaObj@trajectory$to)
+  apply(temporaObj@trajectory, 1, FUN = function(x){
+    net[x[[1]],x[[2]]] <<- 1
+    if (! x[[5]] == "unidirectional") {
+      net[x[[2]],x[[1]]] <<- 1
+    }
+  } )
+  # traj <- SCORPIUS::infer_trajectory(space)
+  n = as.network(net)
+  # 
+  # gnn = ggnetwork(n, layout = as.matrix(mean.points[,2:3]))
+  # # rownames(temporaObj@cluster.metadata) = temporaObj@cluster.metadata$Id
+  # 
+  # # gnn$vertex.names = temporaObj@cluster.metadata[gnn$vertex.names,"label"]
+  # 
+  # ggplot(gnn) + geom_edges(aes(x,y,xend = xend,yend=yend),color = "black") + 
+  #   geom_nodetext(aes(x,y,label = vertex.names ),
+  #                                     fontface = "bold")
+  
+  dat = ggnetwork(n, layout = as.matrix(mean.points[,2:3]))
+  colnames(dat)
+  colnames(data) <- c("x", "y", "vertex.names")
+  data$xend = NA
+  data$yend = NA
+  scaleBJ = function(x,y) scale(x, center = min(y), scale = diff(range(y)))
+  data$x = scaleBJ(data$x,mean.points[,2])
+  data$y = scaleBJ(data$y,mean.points[,3])
+  dat = rbind(dat,data)
+  p2 = ggplot(dat) +
+    geom_point(aes(x, y, col=vertex.names )) +
+    geom_edges(data = subset(dat, !is.na(xend)), 
+               aes(x, y, xend = xend, yend = yend), color="black",
+               alpha = 1, arrow = arrow(length = unit(6, "pt"), type = "closed")) +
+    geom_nodes(data = subset(dat, !is.na(xend)), 
+               aes(x, y, col=vertex.names), 
+               size = 5, color = "white") +
+    geom_nodetext(data = subset(dat, !is.na(xend)), 
+                  aes(x, y, label = vertex.names), 
+                  fontface = "bold") +
+    theme_blank() 
+  
+  p2
+}

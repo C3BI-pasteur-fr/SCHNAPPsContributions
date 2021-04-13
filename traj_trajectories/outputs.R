@@ -924,6 +924,9 @@ library(dplyr)
     # cp =load(file="~/SCHNAPPsDebug/temporaScorpius2dPlot.RData")
 
     p2  = tempora2DPlotFunc(temporaObj, projections, dimX, dimY, dimCol)
+    if(is.null(p2)){
+      return(NULL)
+    }
     
     af = tempora2DPlotFunc
     # remove env because it is too big
@@ -983,20 +986,21 @@ library(dplyr)
   
   ## observe temporaLevels ----
   observe({
-    scEx_log <- scEx_log()
+    projections <- projections()
     temporaFactor = input$temporaFactor
-    if (DEBUG) cat(file = stderr(), "observe input$temporaFactor.\n")
-    if (is.null(scEx_log)) {
+    if (DEBUG) cat(file = stderr(), paste("observe input$temporaFactor ", temporaFactor, ".\n"))
+    if (is.null(projections)) {
       if (DEBUG) cat(file = stderr(), paste("temporaImport:NULL\n"))
       return(NULL)
     }
-    cdat = colData(scEx_log)
+    cdat = projections
     if (! temporaFactor %in% colnames(cdat)) {
       return(NULL)
     }
-    
+    # save(file = "~/SCHNAPPsDebug/temporaobserveFactor.RData", list = c(ls()))
+    # cp = load("~/SCHNAPPsDebug/temporaobserveFactor.RData")
     updateSelectInput(session, "temporaLevels",
-                      choices = levels(cdat[,temporaFactor]),
+                      choices = unique(cdat[,temporaFactor]),
                       selected = .schnappsEnv$temporaFactor)
     
   })

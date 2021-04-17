@@ -1139,7 +1139,7 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   # p_valsOrg = p_vals
   
   func = function(x, object, themes, gsva_bycluster) {
-    if(length(grep(themes[i], rownames(gsva_bycluster))) == 0) {
+    if(length(grep(themes[i], rownames(gsva_bycluster), ignore.case = T)) == 0) {
       return(list(1, NA))
     }
     if (length(grep(themes[i], rownames(gsva_bycluster))) > 1){

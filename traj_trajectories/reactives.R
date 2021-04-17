@@ -1,6 +1,7 @@
 require(ElPiGraph.R)
 require(Tempora)
 require(S4Vectors)
+require(SingleCellExperiment)
 
 # retVal <- drawTrajectoryHeatmap(x=expr_sel, time=traj$time, progression_group=projections[, dimCol], modules,
 #                                 filename = normalizePath(outfile, mustWork = FALSE)
@@ -1117,7 +1118,7 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   cat("Fitting GAM models...")
   
   # system.time({
-  #   p_vals <- gams <- list()
+    p_vals <- gams <- list()
   #   for (i in 1:length(themes)){
   #     print(i)
   #     if(length(grep(themes[i], rownames(gsva_bycluster))) == 0) {

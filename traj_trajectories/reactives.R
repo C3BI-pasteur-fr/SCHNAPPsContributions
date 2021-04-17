@@ -1,5 +1,6 @@
 require(ElPiGraph.R)
 require(Tempora)
+require(S4Vectors)
 
 # retVal <- drawTrajectoryHeatmap(x=expr_sel, time=traj$time, progression_group=projections[, dimCol], modules,
 #                                 filename = normalizePath(outfile, mustWork = FALSE)
@@ -959,7 +960,7 @@ temporaImport <- reactive({
     save(file = "~/SCHNAPPsDebug/temporaImport.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/temporaImport.RData")
-  colData(scEx_log) <- DataFrame(projections[rownames(colData(scEx_log)),])
+    colData(scEx_log) <- S4Vectors::DataFrame(projections[rownames(colData(scEx_log)),])
   # HACK
   # TODO
   # should be a variable, here we are forcing symbol but could be anything.

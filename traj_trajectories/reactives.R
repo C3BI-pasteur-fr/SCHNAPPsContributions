@@ -1115,7 +1115,7 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   pca_pathways_cleaned <- gsub("[[:punct:]]", "", pca_pathways)
   themes <- pca_pathways_cleaned
   
-  cat("Fitting GAM models...")
+  if (DEBUG) cat("Fitting GAM models...")
   
   # system.time({
     p_vals <- gams <- list()
@@ -1138,18 +1138,18 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   # })
   # p_valsOrg = p_vals
   
-  func = function(x, object, themes, gsva_bycluster) {
-    if(length(grep(themes[i], rownames(gsva_bycluster), ignore.case = T)) == 0) {
+  func = function(idx, object, themes, gsva_bycluster) {
+    if(length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)) == 0) {
       return(list(1, NA))
     }
-    if (length(grep(themes[i], rownames(gsva_bycluster))) > 1){
+    if (length(grep(themes[idx], rownames(gsva_bycluster))) > 1){
       plot_df <- data.frame(
-        cluster=colnames(gsva_bycluster[grep(themes[i], rownames(gsva_bycluster)), ]), 
-        value=colMeans(gsva_bycluster[grep(themes[i], rownames(gsva_bycluster)), ], 
+        cluster=colnames(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
+        value=colMeans(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ], 
                        na.rm=T))
-    } else if (length(grep(themes[i], rownames(gsva_bycluster))) == 1){
-      plot_df <- data.frame(cluster=names(gsva_bycluster[grep(themes[i], rownames(gsva_bycluster)), ]), 
-                            value=gsva_bycluster[grep(themes[i], rownames(gsva_bycluster)), ]) 
+    } else if (length(grep(themes[idx], rownames(gsva_bycluster))) == 1){
+      plot_df <- data.frame(cluster=names(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
+                            value=gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]) 
       }
     plot_df$time <- object@cluster.metadata$Cluster_time_score
     gams <- mgcv::gam(value ~ s(time, k=3, bs='cr'), data=plot_df)
@@ -1159,9 +1159,9 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   }
   
   p_valsNew <- bplapply(1:length(themes), function(x) { func(x, object, themes, gsva_bycluster) })
-  for (i in 1:length(p_valsNew)){
-    p_vals[[i]] = p_valsNew[[i]][[1]]
-    gams[[i]] = p_valsNew[[i]][[2]]
+  for (idx in 1:length(p_valsNew)){
+    p_vals[[idx]] = p_valsNew[[idx]][[1]]
+    gams[[idx]] = p_valsNew[[idx]][[2]]
   }
   names(p_vals) <- names(gams) <- themes
   

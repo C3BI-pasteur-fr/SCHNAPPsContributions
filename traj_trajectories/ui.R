@@ -79,7 +79,7 @@ tabList <- list(
       br(),
       fluidRow(
         column(
-          width = 12, offset = 1,
+          width = 12, offset = 0,
           actionButton("updatetScorpiusParameters", "apply changes", width = "80%")
         )
       ),
@@ -205,7 +205,7 @@ tabList <- list(
       br(),
       fluidRow(
         column(
-          width = 12, offset = 1,
+          width = 12, offset = 0,
           actionButton("elpiCalc", "apply changes", width = "80%")
         )
       ),
@@ -272,8 +272,8 @@ tabList <- list(
         br(),
         tags$h3("table"),
         fluidRow(column(
-          10,
-          offset = 1,
+          12,
+          offset = 0,
           tableSelectionUi("elpiTableMod")
         )),
         br(),
@@ -293,12 +293,12 @@ tabList <- list(
                    # The id lets us use input$tabset1 on the server to find the current tab
                    id = "tabsetTempora",
                    fluidRow(column(
-                     width = 12, offset = 1,
+                     width = 12, offset = 0,
                      br("uses transformed data"))),
                    br(),
                    fluidRow(
                      column(
-                       width = 12, offset = 1,
+                       width = 12, offset = 0,
                        actionButton("updatetTemporaParameters", "apply changes", width = "80%")
                      )
                    ),

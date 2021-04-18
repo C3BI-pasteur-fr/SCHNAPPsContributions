@@ -944,7 +944,7 @@ temporaImport <- reactive({
     return(NULL)
   }
   
- 
+  
   if (!all(c(tCluster,tFactor) %in% colnames(projections))){
     if (DEBUG) cat(file = stderr(), paste("tCluster,tFactor:NULL\n"))
     return(NULL)
@@ -961,7 +961,7 @@ temporaImport <- reactive({
     save(file = "~/SCHNAPPsDebug/temporaImport.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/temporaImport.RData")
-    colData(scEx_log) <- S4Vectors::DataFrame(projections[rownames(colData(scEx_log)),])
+  colData(scEx_log) <- S4Vectors::DataFrame(projections[rownames(colData(scEx_log)),])
   # HACK
   # TODO
   # should be a variable, here we are forcing symbol but could be anything.
@@ -975,11 +975,11 @@ temporaImport <- reactive({
   colData(scEx_log)[,tFactor] = factor(colData(scEx_log)[,tFactor])
   colData(scEx_log)[,tCluster] = factor(colData(scEx_log)[,tCluster])
   temporaObj <- ImportSeuratObject(seuratobj = scEx_log, 
-                                       assayType = "logcounts",
-                                       clusters = tCluster,
-                                       timepoints = tFactor,
-                                       timepoint_order = tLevels,
-                                       cluster_labels = levels(projections[,tCluster])
+                                   assayType = "logcounts",
+                                   clusters = tCluster,
+                                   timepoints = tFactor,
+                                   timepoint_order = tLevels,
+                                   cluster_labels = levels(projections[,tCluster])
   )
   
   return(temporaObj)
@@ -1013,8 +1013,8 @@ temporaPWProfiles <- reactive({
     save(file = "~/SCHNAPPsDebug/temporaPWProfiles.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/temporaPWProfiles.RData")
-
-    if (!file.exists(gmt_path$datapath)) {
+  
+  if (!file.exists(gmt_path$datapath)) {
     if (DEBUG) cat(file = stderr(), paste("gmt_path:NULL\n"))
     return(NULL)
   }
@@ -1034,12 +1034,12 @@ temporaPWProfiles <- reactive({
   }
   
   temporaObj <- CalculatePWProfiles(temporaObj, 
-                                        gmt_path = gmt_path$datapath,
-                                        method="gsva", 
-                                        min.sz = min.sz, 
-                                        max.sz = max.sz, 
-                                       
-                                        parallel.sz = BiocParallel::bpnworkers(BPPARAM))
+                                    gmt_path = gmt_path$datapath,
+                                    method="gsva", 
+                                    min.sz = min.sz, 
+                                    max.sz = max.sz, 
+                                    
+                                    parallel.sz = BiocParallel::bpnworkers(BPPARAM))
   
   return(temporaObj)
 })
@@ -1118,7 +1118,7 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   if (DEBUG) cat("Fitting GAM models...")
   
   # system.time({
-    p_vals <- gams <- list()
+  p_vals <- gams <- list()
   #   for (i in 1:length(themes)){
   #     print(i)
   #     if(length(grep(themes[i], rownames(gsva_bycluster))) == 0) {
@@ -1139,18 +1139,22 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   # p_valsOrg = p_vals
   
   func = function(idx, object, themes, gsva_bycluster) {
-    if(length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)) == 0) {
+    crit = length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T))
+    if(crit == 0) {
       return(list(1, NA))
     }
-    if (length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)) > 1){
+    if (crit > 1){
       plot_df <- data.frame(
         cluster=colnames(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
         value=colMeans(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ], 
                        na.rm=T))
-    } else if (length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)) == 1){
+    } else if (crit == 1){
       plot_df <- data.frame(cluster=names(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
                             value=gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]) 
-      }
+    } else {
+      #should not happen
+      return(list(1, NA))
+    }
     plot_df$time <- object@cluster.metadata$Cluster_time_score
     gams <- mgcv::gam(value ~ s(time, k=3, bs='cr'), data=plot_df)
     temp_anova <- mgcv::anova.gam(gams)
@@ -1243,7 +1247,7 @@ temporaPvalModulesTable <- reactive({
   }
   
   temporaObj <- temporaIdentifyVaryingPWs()
-
+  
   if (is.null(temporaObj) ) {
     if (DEBUG) cat(file = stderr(), paste("temporaPvalModulesTable:NULL\n"))
     return(NULL)
@@ -1255,7 +1259,7 @@ temporaPvalModulesTable <- reactive({
   
   outTable = data.frame(goTerm = names(temporaObj@varying.pws))
   outTable$pValues = temporaObj@varying.pws
- 
+  
   return(outTable)
   
 })
@@ -1277,7 +1281,7 @@ tempora2DPlotFunc <- function(temporaObj, projections, dimX, dimY, dimCol) {
   if(!all(unlist(lapply(1:2,  FUN = function(x) is.numeric(data[,x]))))) return (NULL)
   
   mean.points <- aggregate(data[, 1:2], list(data[,3]), mean)
-
+  
   # construct a network
   nCl = length(levels(projections[,dimCol]))
   net = matrix(0, nCl, nCl) 

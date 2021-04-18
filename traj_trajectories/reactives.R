@@ -1142,12 +1142,12 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
     if(length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)) == 0) {
       return(list(1, NA))
     }
-    if (length(grep(themes[idx], rownames(gsva_bycluster))) > 1){
+    if (length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)) > 1){
       plot_df <- data.frame(
         cluster=colnames(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
         value=colMeans(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ], 
                        na.rm=T))
-    } else if (length(grep(themes[idx], rownames(gsva_bycluster))) == 1){
+    } else if (length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)) == 1){
       plot_df <- data.frame(cluster=names(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
                             value=gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]) 
       }

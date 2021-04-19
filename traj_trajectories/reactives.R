@@ -1139,18 +1139,23 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
   # p_valsOrg = p_vals
   
   func = function(idx, object, themes, gsva_bycluster) {
-    crit = length(grep(themes[idx], rownames(gsva_bycluster), ignore.case = T))
+    require(Tempora)
+    require(Matrix)
+    require(BiocGenerics)
+    # cat(file = stderr(), paste(idx, "\n"))
+    grp = BiocGenerics::grep(themes[idx], rownames(gsva_bycluster), ignore.case = T)
+    crit = length(grp)
     if(crit == 0) {
       return(list(1, NA))
     }
     if (crit > 1){
       plot_df <- data.frame(
-        cluster=colnames(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
-        value=colMeans(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ], 
+        cluster=colnames(gsva_bycluster[grp, ]), 
+        value=Matrix::colMeans(gsva_bycluster[grp, ], 
                        na.rm=T))
     } else if (crit == 1){
-      plot_df <- data.frame(cluster=names(gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]), 
-                            value=gsva_bycluster[grep(themes[idx], rownames(gsva_bycluster)), ]) 
+      plot_df <- data.frame(cluster=names(gsva_bycluster[grp, ]), 
+                            value=gsva_bycluster[grp, ]) 
     } else {
       #should not happen
       return(list(1, NA))
@@ -1179,6 +1184,9 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
     #eventhough the function was not successful return the object because in the vignette
     # this function call sets the original object to what is returned and if it is null
     # you loose all the processing you have done until now.
+    if (!is.null(getDefaultReactiveDomain())) {
+      showNotification("No temporally varying pathways detected.", id = "temporaIdentifyVaryingPWs2", duration = 20)
+    }
     return(object)
   } else {
     object@varying.pws <- varying_pathways

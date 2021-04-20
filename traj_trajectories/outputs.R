@@ -782,7 +782,8 @@ library(dplyr)
     if (.schnappsEnv$DEBUGSAVE) {
       save(file = "~/SCHNAPPsDebug/tempora_plot.RData", list = c(ls()))
     }
-    # load(file="~/SCHNAPPsDebug/tempora_plot.RData")
+    # cp = load(file="~/SCHNAPPsDebug/tempora_plot.RData")
+    # temporaObj = to
     
     af = PlotTrajectory
     # remove env because it is too big

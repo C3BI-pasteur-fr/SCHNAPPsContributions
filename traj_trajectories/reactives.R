@@ -960,7 +960,7 @@ temporaImport <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/temporaImport.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/temporaImport.RData")
+  # cp = load(file="~/SCHNAPPsDebug/temporaImport.RData")
   colData(scEx_log) <- S4Vectors::DataFrame(projections[rownames(colData(scEx_log)),])
   # HACK
   # TODO
@@ -971,6 +971,9 @@ temporaImport <- reactive({
   #   setMethod("getMD","SingleCellExperiment",
   #             function(x) data.frame(SingleCellExperiment::colData(x)))
   # )
+  
+  # We only work with the levels that are given. 
+  scEx_log = scEx_log[,colData(scEx_log)[,tFactor] %in% tLevels]
   #in case there are levels where there are no data we have to update this
   colData(scEx_log)[,tFactor] = factor(colData(scEx_log)[,tFactor])
   colData(scEx_log)[,tCluster] = factor(colData(scEx_log)[,tCluster])
@@ -1012,7 +1015,7 @@ temporaPWProfiles <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/temporaPWProfiles.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/temporaPWProfiles.RData")
+  # cp = load(file="~/SCHNAPPsDebug/temporaPWProfiles.RData")
   
   if (!file.exists(gmt_path$datapath)) {
     if (DEBUG) cat(file = stderr(), paste("gmt_path:NULL\n"))
@@ -1032,7 +1035,8 @@ temporaPWProfiles <- reactive({
     if (DEBUG) cat(file = stderr(), paste("GSEABase::getGmt:NULL\n"))
     return(NULL)
   }
-  
+  # DEBUG
+  # gmt_path$datapath = "~/Rstudio/SCHNAPPsContributions/Mouse_GOBP_AllPathways_no_GO_iea_February_05_2021_symbol.gmt"
   temporaObj <- CalculatePWProfiles(temporaObj, 
                                     gmt_path = gmt_path$datapath,
                                     method="gsva", 
@@ -1040,6 +1044,7 @@ temporaPWProfiles <- reactive({
                                     max.sz = max.sz, 
                                     
                                     parallel.sz = BiocParallel::bpnworkers(BPPARAM))
+  # to = temporaObj
   
   return(temporaObj)
 })
@@ -1070,7 +1075,8 @@ temporaTrajectory <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/temporaTrajectory.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/temporaTrajectory.RData")
+  # cp = load(file="~/SCHNAPPsDebug/temporaTrajectory.RData")
+  # temporaObj = to
   temporaObj = tryCatch ({
     BuildTrajectory(temporaObj, 
                     n_pcs = n_pcs, 
@@ -1084,7 +1090,7 @@ temporaTrajectory <- reactive({
     }
     return(NULL)
   })
-  
+  # to = temporaObj
   
   return(temporaObj)
 })
@@ -1193,6 +1199,7 @@ IdentifyVaryingPWsParallel <- function(object, pval_threshold=0.05){
     object@gams <- gams
     return(object)
   }
+  # to = object
 }
 
 
@@ -1224,7 +1231,8 @@ temporaIdentifyVaryingPWs <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/temporaIdentifyVaryingPWs.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/temporaIdentifyVaryingPWs.RData")
+  # cp = load(file="~/SCHNAPPsDebug/temporaIdentifyVaryingPWs.RData")
+  # object = to
   
   #Fit GAMs on pathway enrichment profile
   temporaObj <- IdentifyVaryingPWsParallel(object = temporaObj, pval_threshold = temporaPval_thresh)

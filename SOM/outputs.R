@@ -34,4 +34,30 @@ observe(label = "ob_somParameter",
           
         })
 
+output$coE_SOMcodebook <- renderPlot({
+  sommap = coE_somMapReact()
+  if (is.null(sommap)) return(NULL)
+  plot(sommap, type="codes", main = "Codes")
+})
 
+
+output$coE_SOMcomponents <- renderPlot({
+  sommap = coE_somMapReact()
+  if (is.null(sommap)) return(NULL)
+
+    plot(sommap, type = "property", property = sommap$codes[[1]][,1],
+       main = colnames(sommap$codes)[1])
+})
+output$coE_SOMuMat <- renderPlot({
+  sommap = coE_somMapReact()
+  if (is.null(sommap)) return(NULL)
+  plot(sommap, type="dist.neighbours")
+})
+
+# ## Show 'codebook'
+# plot(sommap, type="codes", main = "Codes")
+# ## Show 'component planes'
+# plot(sommap, type = "property", property = sommap$codes[[1]][,1],
+#      main = colnames(sommap$codes)[1])
+# ## Show 'U-Matrix'
+# plot(sommap, type="dist.neighbours")

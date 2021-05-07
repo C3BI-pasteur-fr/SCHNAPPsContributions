@@ -58,6 +58,21 @@ tabList = list(
       fluidRow(column(
         width = 12,
         verbatimTextOutput("coE_somGenes")
+      )),
+      br(),
+      fluidRow(column(
+        width = 12,
+        plotOutput("coE_SOMcodebook")
+      )),
+      br(),
+      fluidRow(column(
+        width = 12,
+        plotOutput("coE_SOMcomponents")
+      )),
+      br(),
+      fluidRow(column(
+        width = 12,
+        plotOutput("coE_SOMuMat")
       ))
     )
   )

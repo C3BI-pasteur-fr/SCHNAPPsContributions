@@ -1,18 +1,20 @@
 
 suppressMessages(require(Rsomoclu))
 suppressMessages(require(kohonen))
-
+require(glue)
 
 # source("~/Rstudio/UTechSCB-SCHNAPPs/inst/app/serverFunctions.R")
 # library(SCHNAPPs)
 # library(shiny)
+# library(SingleCellExperiment)
+
 
 #' coE_somTrain
 #' iData = expression matrix, rows = genes
 #' cluster genes in SOM
 #' returns genes associated together within a som-node
-# coE_somTrain <- function(iData, nSom, geneName, ,clusterSOM = "dbCluster", clusterVal = "1") {
-coE_somTrain <- function(iData, nSom, inputCells = "") {
+# coE_somTrain <- function(inputData, nSom, geneName, ,clusterSOM = "dbCluster", clusterVal = "1") {
+coE_somTrain <- function(inputData, nSom) {
   if (DEBUG) cat(file = stderr(), "coE_somTrain started.\n")
   start.time <- base::Sys.time()
   on.exit({
@@ -31,9 +33,9 @@ coE_somTrain <- function(iData, nSom, inputCells = "") {
   }
   # cp = load(file="~/SCHNAPPsDebug/coE_somTrain.Rdata")
   
-  cols2use <- which (colnames(iData) %in% inputCells)
+  # cols2use <- which (colnames(iData) %in% inputCells)
   res2 <- Rsomoclu.train(
-    input_data = iData[, cols2use],
+    input_data = inputData,
     nSomX = nSom, nSomY = nSom,
     nEpoch = 10,
     radius0 = 0,
@@ -45,12 +47,12 @@ coE_somTrain <- function(iData, nSom, inputCells = "") {
     scaleN = 0.01,
     scaleCooling = "linear"
   )
-  colnames(res2$codebook) <- rownames(iData)[cols2use]
-  rownames(res2$globalBmus) <- make.unique(as.character(rownames(iData)), sep = "___")
+  colnames(res2$codebook) <- colnames(inputData)
+  rownames(res2$globalBmus) <- make.unique(as.character(rownames(inputData)), sep = "___")
   return(res2)
 } 
-  
-coE_somMap <- function(res2, iData) {
+
+coE_somMap <- function(res2, inputData) {
   if (DEBUG) cat(file = stderr(), "coE_somMap started.\n")
   start.time <- base::Sys.time()
   on.exit({
@@ -62,10 +64,12 @@ coE_somMap <- function(res2, iData) {
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("coE_somMap", id = "coE_somMap", duration = NULL)
   }
-  if (is.null(res2) |is.null(iData)) {
+  if (is.null(res2) |is.null(inputData)) {
     return(NULL)
   }
-  sommap = Rsomoclu.kohonen(iData, res2)
+  sommap = Rsomoclu.kohonen(inputData, res2)
+  # plot(sommap, type = "property", property = getCodes(sommap)[,4], main=colnames(getCodes(sommap))[4])
+  
   return(sommap)
 }
 
@@ -95,13 +99,13 @@ coE_somGenes <- function(res2, geneName) {
   if (is.null(res2) ) {
     return(NULL)
   }
-  if (geneName %in% rownames(res2$globalBmus)) {
+  if (!geneName %in% rownames(res2$globalBmus)) {
     return(NULL)
   }
   
   simGenes <- rownames(res2$globalBmus)[which(res2$globalBmus[, 1] == res2$globalBmus[geneName, 1] &
                                                 res2$globalBmus[, 2] == res2$globalBmus[geneName, 2])]
-
+  
   return(simGenes)
 }
 
@@ -175,6 +179,58 @@ observe(label = "ob14", {
 # })
 
 
+somInputData <- reactive({
+  if (DEBUG) cat(file = stderr(), "somInputData started.\n")
+  start.time <- base::Sys.time()
+  on.exit({
+    printTimeEnd(start.time, "somInputData")
+    if (!is.null(getDefaultReactiveDomain())) {
+      removeNotification(id = "somInputData")
+    }
+  })
+  if (!is.null(getDefaultReactiveDomain())) {
+    showNotification("somInputData", id = "somInputData", duration = NULL)
+  }
+  
+  if (!is.null(getDefaultReactiveDomain())) {
+    removeNotification(id = "heatmapWarning")
+  }
+  scEx_log <- scEx_log()
+  input$updateSOMParameters
+  selectedCells <- isolate(coE_SOM_dataInput())
+  inputCells <- isolate(selectedCells$cellNames())
+  method <- isolate(input$coE_distSOM)
+  
+  
+  if (is.null(scEx_log)) {
+    return(NULL)
+  }
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/somInputData.RData", list = c(ls()))
+  }
+  # cp = load(file = "~/SCHNAPPsDebug/somInputData.RData")
+  
+  cols2use <- which (colnames(scEx_log) %in% inputCells)
+  scEx_log = scEx_log[,cols2use]
+  iData <- switch(method,
+                  "raw" = {as.matrix(assays(scEx_log)[[1]])},
+                  "Spearman" = {
+                    t =t(apply(as.matrix(assays(scEx_log)[[1]]), 1, FUN = function(x)rank(x,ties.method = "average")))
+                    rownames(t) = rownames(assays(scEx_log)[[1]])
+                    colnames(t) = colnames(assays(scEx_log)[[1]])
+                    return(t)
+                  },
+                  "standardized" = {
+                    t =apply(as.matrix(assays(scEx_log)[[1]]), 2, FUN = function(x)scale(x))
+                    t =t(apply(t, 1, FUN = function(x)scale(x)))
+                    rownames(t) = rownames(assays(scEx_log)[[1]])
+                    colnames(t) = colnames(assays(scEx_log)[[1]])
+                    return(t)
+                  }
+  ) 
+  
+  return(iData)
+})
 
 coE_somMapReact <- reactive({
   if (DEBUG) cat(file = stderr(), "coE_somMapReact started.\n")
@@ -194,24 +250,24 @@ coE_somMapReact <- reactive({
   }
   
   scEx_log <- scEx_log()
-  input$updateSOMParameters
+  # input$updateSOMParameters
+  inputData = isolate(somInputData())
+  # selectedCells <- isolate(coE_SOM_dataInput())
+  # inputCells <- isolate(selectedCells$cellNames())
+  res2 = coE_somTrainReact()
   
-  selectedCells <- isolate(coE_SOM_dataInput())
-  inputCells <- isolate(selectedCells$cellNames())
-   res2 = isolate(coE_somTrainReact())
-   
   if (is.null(scEx_log) | is.null(res2)) {
     return(NULL)
   }
-   if (.schnappsEnv$DEBUGSAVE) {
-     save(file = "~/SCHNAPPsDebug/coE_somMap.RData", list = c(ls()))
-   }
-   # cp = load(file = "~/SCHNAPPsDebug/coE_heatmapSOMReactive.RData")
-   
-  iData <- as.matrix(assays(scEx_log)[[1]])
-  cols2use <- which (colnames(iData) %in% inputCells)
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/coE_somMapReact.RData", list = c(ls()))
+  }
+  # cp = load(file = "~/SCHNAPPsDebug/coE_somMapReact.RData")
   
-  sommap <- coE_somMap(res2, iData[,cols2use]) 
+  # iData <- as.matrix(assays(scEx_log)[[1]])
+  # cols2use <- which (colnames(iData) %in% inputCells)
+  
+  sommap <- coE_somMap(res2, inputData) 
   return(sommap)
 })
 
@@ -237,22 +293,22 @@ coE_somTrainReact <- reactive({
   input$updateSOMParameters
   
   nSom <- isolate(input$coE_dimSOM)
-  selectedCells <- isolate(coE_SOM_dataInput())
-  inputCells <- isolate(selectedCells$cellNames())
-  genesin <- isolate(input$coE_geneSOM)
-  
+  inputData = isolate(somInputData())
+  # selectedCells <- isolate(coE_SOM_dataInput())
+  # inputCells <- isolate(selectedCells$cellNames())
+  # genesin <- isolate(input$coE_geneSOM)
   if (is.null(scEx_log)) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/coE_somTrain.RData", list = c(ls()))
   }
-  # cp = load(file = "~/SCHNAPPsDebug/coE_heatmapSOMReactive.RData")
+  # cp = load(file = "~/SCHNAPPsDebug/coE_somTrain.RData")
   
-  iData <- as.matrix(assays(scEx_log)[[1]])
-  cols2use <- which (colnames(iData) %in% inputCells)
   
-  res2 = coE_somTrain(iData[,cols2use], nSom, inputCells)
+  res2 = coE_somTrain(inputData, nSom)
+  # TODO   need to remove projections if they were already calculated
+  
   return(res2)
 })
 
@@ -275,11 +331,13 @@ coE_somGenesReact <- reactive({
     removeNotification(id = "heatmapWarning")
   }
   
-  input$updateSOMParameters
+  # input$updateSOMParameters
   scEx_log <- scEx_log()
+  sommap = coE_somMapReact()
+  prjs <- isolate(sessionProjections$prjs)
   
-  genesin <- isolate(input$coE_geneSOM)
-  res2 = isolate(coE_somTrainReact())
+  genesin <- input$coE_geneSOM
+  res2 = coE_somTrainReact()
   
   if (is.null(scEx_log) | is.null(res2)) {
     return(NULL)
@@ -287,11 +345,40 @@ coE_somGenesReact <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/coE_somGenes.RData", list = c(ls()))
   }
-  # cp = load(file = "~/SCHNAPPsDebug/coE_heatmapSOMReactive.RData")
+  # cp = load(file = "~/SCHNAPPsDebug/coE_somGenes.RData")
   featureData <- rowData(scEx_log)
   geneName = geneName2Index(genesin, featureData)
-  
+  if(length(geneName) == 0) {return(NULL)}
   genes = coE_somGenes(res2, geneName)
+  
+  idxX = res2$globalBmus[geneName, 1] + 1
+  idxY = res2$globalBmus[geneName, 2] + 1
+  updateNumericInput(session = session, inputId = "coE_dimSOMX",  value = as.integer(idxX))
+  updateNumericInput(session = session, inputId = "coE_dimSOMY", value = as.integer(idxY))
+  idx = which(sommap$grid$pts[,1] == (res2$globalBmus[geneName, 1] + 1) & sommap$grid$pts[,2] == (res2$globalBmus[geneName, 2] + 1) )
+  
+  rd = data.frame(row.names = colnames(scEx_log))
+  cn = glue("som_{idxX}_{idxY}")
+  rd[,cn ] = 0
+  rd[colnames(res2$codebook),  ] = res2$codebook[idx, ]
+  
+  if (ncol(prjs) > 0) {
+    prjs <- prjs[colnames(scEx_log), ,drop = FALSE]
+    
+    if (cn %in% colnames(prjs)) {
+      prjs[, cn] <- rd[, cn]
+    } else {
+      prjs <- base::cbind(prjs, rd[, cn,drop = FALSE], deparse.level = 0)
+      colnames(prjs)[ncol(prjs)] <- cn
+    }
+    
+    
+  }else {
+    prjs <- rd
+  }
+  sessionProjections$prjs <- prjs
+  
+  
   return(genes)
 })
 
@@ -318,18 +405,20 @@ coE_heatmapSOMReactive <- reactive({
   }
   
   scEx_log <- scEx_log()
-  projections <- projections()
-  input$updateSOMParameters
+  projections <- isolate(projections())
+  # input$updateSOMParameters
   sampCol <- sampleCols$colPal
   ccols <- clusterCols$colPal
   # coE_updateInputSOMt()
   
-  genesin <- isolate(input$coE_geneSOM)
-  geneNames = isolate(coE_somGenesReact())
+  # genesin <- isolate(input$coE_geneSOM)
+  geneNames = coE_somGenesReact()
   selectedCells <- isolate(coE_SOM_dataInput())
+  cellNs <- isolate(selectedCells$cellNames())
   sampdesc <- isolate(selectedCells$selectionDescription())
   prj <- isolate(selectedCells$ProjectionUsed())
   prjVals <- isolate(selectedCells$ProjectionValsUsed())
+  nSom <- isolate(input$coE_dimSOM)
   
   if (is.null(scEx_log) | is.null(geneNames) ) {
     return(
@@ -351,9 +440,9 @@ coE_heatmapSOMReactive <- reactive({
   scEx_matrix <- as.matrix(assays(scEx_log)[[1]])
   featureData <- rowData(scEx_log)
   # go from readable gene name to ENSG number
-  genesin <- geneName2Index(genesin, featureData)
+  # genesin <- geneName2Index(genesin, featureData)
   
-
+  
   # plot the genes found
   output$coE_somGenes <- renderText({
     paste(sampdesc, "\n",
@@ -406,7 +495,8 @@ coE_heatmapSOMReactive <- reactive({
   setRedGreenButton(
     vars = list(
       c("coE_geneSOM", isolate(input$coE_geneSOM)),
-      c("coE_dimSOM", nSOM),
+      c("coE_dimSOM", nSom),
+      c("coE_distSOM", isolate(input$coE_distSOM)),
       c("coE_SOM_dataInput-Mod_PPGrp", prjVals),
       c("coE_SOM_dataInput-Mod_clusterPP", prj)
     ),

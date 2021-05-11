@@ -33,6 +33,13 @@ tabList = list(
             ), 
             column(width = 3,
                    textInput("coE_geneSOM", "Gene of interest", value = defaultValueSingleGene)
+            ),
+            column(width = 3,
+                   selectInput("coE_distSOM",
+                               label = "Distance",
+                               choices = c("raw", "Spearman", "standardized"),
+                               selected = "raw"
+                   )
             )
           )
         ),
@@ -48,8 +55,7 @@ tabList = list(
         # )
       ),
       br(),
-      fluidRow(
-        column(
+      fluidRow(column(
           width = 12,
           pHeatMapUI("coE_heatmapSOM")
         )
@@ -73,7 +79,28 @@ tabList = list(
       fluidRow(column(
         width = 12,
         plotOutput("coE_SOMuMat")
+      )),
+      br(),
+      fluidRow(column(
+        width = 6,
+        numericInput("coE_dimSOMX", "row",
+                     1,
+                     min = 1, max = 100
+        )
+      ),
+      column(
+        width = 6,
+        numericInput("coE_dimSOMY", "column",
+                     1,
+                     min = 1, max = 100
+        )
+      ),
+      br(),
+      fluidRow(column(
+        width = 12,
+        verbatimTextOutput("coE_somInfo")
       ))
+      )
     )
   )
 )

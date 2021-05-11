@@ -54,6 +54,22 @@ output$coE_SOMuMat <- renderPlot({
   plot(sommap, type="dist.neighbours")
 })
 
+output$coE_somInfo <- renderText({
+  
+  idxx = input$coE_dimSOMX - 1
+  idxy = input$coE_dimSOMY - 1
+  res2 = coE_somTrainReact()
+  
+  if (is.null(res2)) {
+    return("Genes in neuron\n")
+  }
+  
+  paste("Genes in neuron (", length(which(res2$globalBmus[,1]==idxx & res2$globalBmus[,2]==idxy)), ")\n",
+        paste(names(which(res2$globalBmus[,1]==idxx & res2$globalBmus[,2]==idxy)), collapse = ", ", sep = ",")
+  )
+})
+
+
 # ## Show 'codebook'
 # plot(sommap, type="codes", main = "Codes")
 # ## Show 'component planes'

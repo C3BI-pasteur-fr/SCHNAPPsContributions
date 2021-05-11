@@ -861,9 +861,9 @@ library(dplyr)
       return(NULL)
     }
     
-    # if (.schnappsEnv$DEBUGSAVE) {
+    if (.schnappsEnv$DEBUGSAVE) {
       save(file = "~/SCHNAPPsDebug/temporaSelectedGOs.RData", list = c(ls(), ".schnappsEnv"))
-    # }
+    }
     # cp = load(file="~/SCHNAPPsDebug/temporaSelectedGOs.RData")
       selectedGOs =  as.numeric(strsplit(selectedGOs,"," )[[1]])
     # max (temporaObj@varying.pws)

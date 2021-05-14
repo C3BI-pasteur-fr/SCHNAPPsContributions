@@ -424,6 +424,8 @@ tabList <- list(
                      jqui_resizable(plotOutput("temporaSelectedGOs", height = "672px")) # %>% withSpinner()
                    )),
                    br(),
+                   fluidRow(column(12,
+                                   verbatimTextOutput("coE_temporaPWgenes"))),
                    actionButton("save2Hist_temporaSelectedGOs", "save to history")
                  ),
                  tabPanel(

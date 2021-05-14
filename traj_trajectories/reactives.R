@@ -988,6 +988,24 @@ temporaImport <- reactive({
   return(temporaObj)
 })
 
+
+temporaGeneIds = reactive({
+  gmt_path = input$temporaGMTFile
+  gs1 = tryCatch ({GSEABase::getGmt(gmt_path$datapath)},
+                  error = function(e) {
+                    cat(file = stderr(), "GSEABase::getGmt")
+                    if (!is.null(getDefaultReactiveDomain())) {
+                      showNotification("GSEABase::getGmt not a valid file", 
+                                       id = "temporaPWProfiles", type = "error", duration = NULL)
+                    }
+                    return(NULL)
+                  })
+  if(!is.null(gs1)) {
+    return(GSEABase::geneIds(gs1))
+  }
+  return(NULL)
+})
+
 # temporaPWProfiles ----
 temporaPWProfiles <- reactive({
   if (DEBUG) cat(file = stderr(), "temporaPWProfiles started.\n")

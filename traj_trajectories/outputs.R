@@ -882,8 +882,7 @@ library(dplyr)
                                                         object = temporaObj
       )
       
-      
-    
+
     PlotVaryingPWs(temporaObj)
     
   })
@@ -950,6 +949,42 @@ library(dplyr)
   selectedGOs <- callModule(tableSelectionServer, "temporaGOTableMod", temporaPvalModulesTable)
   
   
+  output$coE_temporaPWgenes = renderText({
+    if (DEBUG) cat(file = stderr(), "coE_temporaPWgenes started.\n")
+    start.time <- base::Sys.time()
+    on.exit({
+      printTimeEnd(start.time, "coE_temporaPWgenes")
+      if (!is.null(getDefaultReactiveDomain()))
+        removeNotification(id = "coE_temporaPWgenes")
+    })
+    if (!is.null(getDefaultReactiveDomain())) {
+      showNotification("coE_temporaPWgenes", id = "coE_temporaPWgenes", duration = NULL)
+    }
+
+    temporaObj <- temporaIdentifyVaryingPWs()
+    sGOs = as.numeric(selectedGOs())
+    tgi = temporaGeneIds()
+    
+    if (is.null(temporaObj) ) {
+      if (DEBUG) cat(file = stderr(), paste("coE_temporaPWgenes:NULL\n"))
+      return(NULL)
+    }
+    if (length(sGOs)<1) {
+      if (DEBUG) cat(file = stderr(), paste("no pathway selected\n"))
+      return(NULL)
+    }
+    if (.schnappsEnv$DEBUGSAVE) {
+      save(file = "~/SCHNAPPsDebug/coE_temporaPWgenes.RData", list = c(ls()))
+    }
+    # load(file="~/SCHNAPPsDebug/coE_temporaPWgenes.RData")
+    goName = names(temporaObj@varying.pws)[sGOs]
+    
+    nn = grep(paste0("^",goName,"%"), names(tgi))
+    if(is.null(nn)) return(NULL)
+    if(length(nn)>1){return(paste("more than one found:  ", names(tgi[nn]),"__",tgi[nn],  sep="", collapse=", "))}
+    return(paste(tgi[[nn ]],  sep="", collapse=", "))
+          
+  })
   ## observe dimX/Y ----
   observe({
     projections = projections()

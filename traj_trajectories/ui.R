@@ -24,6 +24,12 @@ tabList <- list(
       title = "Scorpius trajectory inference", solidHeader = TRUE, width = 12, status = "primary",
       
       fluidRow(
+        column( offset = 3,
+                width = 12, 
+                cellSelectionUI("Scorpius_dataInput")
+        )),
+      br(),
+      fluidRow(
         column(
           width = 4,
           selectInput("dimScorpiusX",
@@ -109,6 +115,12 @@ tabList <- list(
       #                 offset = 1,
       #                 checkboxInput("elpiCalc", "calculate", FALSE)
       # )),
+      fluidRow(
+        column( offset = 3,
+                width = 12, 
+                cellSelectionUI("Elpi_dataInput")
+        )),
+      br(),
       fluidRow(
         column(
           3,
@@ -295,6 +307,12 @@ tabList <- list(
                    fluidRow(column(
                      width = 12, offset = 0,
                      br("uses transformed data"))),
+                   br(),
+                   fluidRow(
+                     column( offset = 3,
+                             width = 12, 
+                             cellSelectionUI("Tempora_dataInput")
+                     )),
                    br(),
                    fluidRow(
                      column(

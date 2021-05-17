@@ -12,21 +12,25 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
                                   show_labels_row = FALSE, show_labels_col = FALSE, scale_features = TRUE,
                                   ...) {
   if (!is.matrix(x) && !is.data.frame(x)) {
-    stop(sQuote("x"), " must be a numeric matrix or data frame")
+    cat(sQuote("x"), " must be a numeric matrix or data frame",file = stderr())
+    return(NULL)
   }
   if (!is.vector(time) || !is.numeric(time)) {
-    stop(sQuote("time"), " must be a numeric vector")
+    cat(sQuote("time"), " must be a numeric vector",file = stderr())
+    return(NULL)
   }
   if (nrow(x) != length(time)) {
-    stop(
+    cat(
       sQuote("time"), " must have one value for each row in ",
-      sQuote("x")
+      sQuote("x"),file = stderr()
     )
+    return(NULL)
   }
   if ((!is.null(progression_group) && !is.vector(progression_group) &&
        !is.factor(progression_group)) || (!is.null(progression_group) &&
                                           length(progression_group) != nrow(x))) {
-    stop(sQuote("progression_group"), " must be a vector or a factor of length nrow(x)")
+    cat(sQuote("progression_group"), " must be a vector or a factor of length nrow(x)",file = stderr())
+    return(NULL)
   }
   if (is.null(rownames(x))) {
     rownames(x) <- paste("Row ", seq_len(nrow(x)))
@@ -96,7 +100,31 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
 # scorpiuseParameters ----
 # herewith we control that scorpius is only run if the button is pressed.
 scorpiuseParameters <- reactiveValues()
+Scorpius_dataInput <- callModule(
+  cellSelectionModule,
+  "Scorpius_dataInput"
+)
 
+
+Scorpius_scEx_log <- reactive({
+  scEx_log = scEx_log()
+  if(is.null(scEx_log)) return(NULL)
+  # browser()
+  selectedCells <- isolate(Scorpius_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
+  scEx_log = scEx_log[,cellNs]
+})
+
+
+scorpius_projections <- reactive({
+  projections <- projections()
+  if (is.null(projections)) return(NULL)
+  selectedCells <- isolate(Scorpius_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
+  projections[cellNs,]
+})
 # scorpiusInput ----
 # read input space from file
 scorpiusInput <- reactive({
@@ -152,7 +180,7 @@ scorpiusSpace <- reactive({
   dimX <- scorpiuseParameters$dimX
   dimY <- scorpiuseParameters$dimY
   scInput <- scorpiuseParameters$scInput
-  projections <- projections()
+  projections <- scorpius_projections()
   
   if (!is.null(scInput)) {
     return(scInput[, c(1, 2)])
@@ -253,7 +281,7 @@ scorpiusExpSel <- reactive({
   if (input$updatetScorpiusParameters == 0) {
     return(NULL)
   }
-  scEx_log <- isolate(scEx_log())
+  scEx_log <- isolate(Scorpius_scEx_log())
   traj <- isolate(scorpiusTrajectory())
   # doCalc <- input$scorpiusCalc
   scorpMaxGenes <- scorpiuseParameters$scorpMaxGenes
@@ -302,7 +330,7 @@ scorpiusModules <- reactive({
   }
   
   # browser()
-  scEx_log <- isolate(scEx_log())
+  scEx_log <- isolate(Scorpius_scEx_log())
   # projections = projections()
   # space <- scorpiusSpace()
   traj <- isolate(scorpiusTrajectory())
@@ -358,7 +386,7 @@ scorpiusModulesTable <- reactive({
     return(NULL)
   }
   
-  scEx_log <- isolate(scEx_log())
+  scEx_log <- isolate(Scorpius_scEx_log())
   # projections = projections()
   # space <- scorpiusSpace()
   traj <- isolate(scorpiusTrajectory())
@@ -400,6 +428,38 @@ scorpiusModulesTable <- reactive({
 # --------------------------
 # TODO change to projections input
 
+Elpi_dataInput <- callModule(
+  cellSelectionModule,
+  "Elpi_dataInput"
+)
+Elpi_scEx_log <- reactive({
+  scEx_log = scEx_log()
+  if(is.null(scEx_log)) return(NULL)
+  
+  selectedCells <- isolate(Elpi_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
+  scEx_log = scEx_log[,cellNs]
+  return(scEx_log)
+})
+Elpi_scEx <- reactive({
+  scEx = scEx()
+  if(is.null(scEx)) return(NULL)
+  
+  selectedCells <- isolate(Elpi_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
+  scEx = scEx[,cellNs]
+  return(scEx)
+})
+Elpi_projections <- reactive({
+  projections <- projections()
+  if (is.null(projections)) return(NULL)
+  selectedCells <- isolate(Elpi_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
+  projections[cellNs,]
+})
 
 # elpiTreeData ----
 elpiTreeData <- reactive({
@@ -408,8 +468,8 @@ elpiTreeData <- reactive({
   }
   
   clicked <- input$elpiCalc
-  scEx <- scEx()
-  projections <- isolate(projections())
+  scEx <- Elpi_scEx()
+  projections <- isolate(Elpi_projections())
   dimElpi <- isolate(input$dimElpi)
   dim1 <- input$dimElpiX
   dim2 <- input$dimElpiY
@@ -436,7 +496,6 @@ elpiTreeData <- reactive({
   t(assays(scEx)[[1]])
 })
 
-
 # traj_endpoints ----
 traj_endpoints <- reactive({
   start.time <- base::Sys.time()
@@ -452,9 +511,9 @@ traj_endpoints <- reactive({
   
   clicked <- input$elpiCalc
   TreeEPG <- elpiGraphCompute()
-  scEx_log <- scEx_log()
+  scEx_log <- Elpi_scEx_log()
   
-  projections <- isolate(projections())
+  projections <- isolate(Elpi_projections())
   elpimode <- isolate(input$ElpiMethod)
   seed <- isolate(input$elpiSeed)
   
@@ -490,7 +549,7 @@ traj_getPseudotime <- reactive({
   }
   if (DEBUG) cat(file = stderr(), "traj_getPseudotime started.\n")
   clicked <- input$elpiCalc
-  scEx_log <- scEx_log()
+  scEx_log <- Elpi_scEx_log()
   # scEx_log_sha <- scEx_log_sha()
   TreeEPG <- elpiGraphCompute()
   # TreeEPG_sha <- TreeEPG_sha()
@@ -563,7 +622,7 @@ traj_elpi_modules <- reactive({
   if (DEBUG) cat(file = stderr(), "traj_elpi_modules started.\n")
   
   clicked <- input$elpiCalc
-  scEx_log <- scEx_log()
+  scEx_log <- Elpi_scEx_log()
   TreeEPG <- elpiGraphCompute()
   gene_sel <- traj_elpi_gimp()
   
@@ -614,8 +673,8 @@ traj_elpi_gimp <- reactive({
     showNotification("traj_elpi_gimp", id = "traj_elpi_gimp", duration = NULL)
   }
   if (DEBUG) cat(file = stderr(), "traj_elpi_gimp started.\n")
-  scEx_log <- scEx_log()
-  projections <- projections()
+  scEx_log <- Elpi_scEx_log()
+  projections <- Elpi_projections()
   TreeEPG <- elpiGraphCompute()
   psTime = traj_getPseudotime()
   clicked <- input$elpiCalc
@@ -716,8 +775,8 @@ traj_tragetPath <- reactive({
     showNotification("traj_tragetPath", id = "traj_tragetPath", duration = NULL)
   }
   if (DEBUG) cat(file = stderr(), "traj_tragetPath started.\n")
-  scEx_log <- scEx_log()
-  projections <- projections()
+  scEx_log <- Elpi_scEx_log()
+  projections <- Elpi_projections()
   TreeEPG <- elpiGraphCompute()
   clicked <- input$elpiCalc
   startNode <- input$elpiStartNode
@@ -894,7 +953,7 @@ elpiModulesTable <- reactive({
   }
   clicked <- input$elpiCalc
   
-  scEx_log <- isolate(scEx_log())
+  scEx_log <- isolate(Elpi_scEx_log())
   traj <- traj_getPseudotime()
   expr_sel <- traj_elpi_gimp()
   modules <- traj_elpi_modules()
@@ -919,6 +978,10 @@ elpiModulesTable <- reactive({
 
 
 # temporaImport ----
+Tempora_dataInput <- callModule(
+  cellSelectionModule,
+  "Tempora_dataInput"
+)
 
 temporaImport <- reactive({
   if (DEBUG) cat(file = stderr(), "temporaImport started.\n")
@@ -938,6 +1001,9 @@ temporaImport <- reactive({
   tCluster <- isolate(input$temporaCluster)
   tFactor <- isolate(input$temporaFactor)
   tLevels <- isolate(input$temporaLevels)
+  selectedCells <- isolate(Tempora_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
   
   if (is.null(scEx_log) | is.null(projections)) {
     if (DEBUG) cat(file = stderr(), paste("temporaImport:NULL\n"))
@@ -958,9 +1024,10 @@ temporaImport <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-    save(file = "~/SCHNAPPsDebug/temporaImport.RData", list = c(ls()))
+    save(file = "~/SCHNAPPsDebug/temporaImport.RData", list = c(ls()),compress = F)
   }
   # cp = load(file="~/SCHNAPPsDebug/temporaImport.RData")
+  scEx_log = scEx_log[,cellNs]
   colData(scEx_log) <- S4Vectors::DataFrame(projections[rownames(colData(scEx_log)),])
   # HACK
   # TODO
@@ -982,7 +1049,7 @@ temporaImport <- reactive({
                                    clusters = tCluster,
                                    timepoints = tFactor,
                                    timepoint_order = tLevels,
-                                   cluster_labels = levels(projections[,tCluster])
+                                   cluster_labels = levels(colData(scEx_log)[,tCluster])
   )
   
   return(temporaObj)
@@ -1148,6 +1215,7 @@ temporaIdentifyVaryingPWs <- reactive({
   
   #Fit GAMs on pathway enrichment profile
   temporaObj <- IdentifyVaryingPWsParallel(object = temporaObj, pval_threshold = temporaPval_thresh)
+  # temporaObj <- IdentifyVaryingPWs(object = temporaObj, pval_threshold = temporaPval_thresh)
   
   
   
@@ -1183,7 +1251,7 @@ temporaPvalModulesTable <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/temporaPvalModulesTable.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/temporaPvalModulesTable.RData")
+  # cp = load(file="~/SCHNAPPsDebug/temporaPvalModulesTable.RData")
   
   outTable = data.frame(goTerm = names(temporaObj@varying.pws))
   outTable$pValues = temporaObj@varying.pws

@@ -202,7 +202,7 @@ somInputData <- reactive({
   method <- isolate(input$coE_distSOM)
   
   
-  if (is.null(scEx_log)) {
+  if (is.null(scEx_log) | input$updateSOMParameters < 1) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -251,12 +251,12 @@ coE_somMapReact <- reactive({
   
   scEx_log <- scEx_log()
   # input$updateSOMParameters
-  inputData = isolate(somInputData())
+  inputData = somInputData()
   # selectedCells <- isolate(coE_SOM_dataInput())
   # inputCells <- isolate(selectedCells$cellNames())
   res2 = coE_somTrainReact()
   
-  if (is.null(scEx_log) | is.null(res2)) {
+  if (is.null(scEx_log) | is.null(res2) | is.null(inputData)) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -297,7 +297,7 @@ coE_somTrainReact <- reactive({
   # selectedCells <- isolate(coE_SOM_dataInput())
   # inputCells <- isolate(selectedCells$cellNames())
   # genesin <- isolate(input$coE_geneSOM)
-  if (is.null(scEx_log)) {
+  if (is.null(scEx_log) | input$updateSOMParameters < 1) {
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
@@ -335,6 +335,7 @@ coE_somGenesReact <- reactive({
   scEx_log <- scEx_log()
   sommap = coE_somMapReact()
   prjs <- isolate(sessionProjections$prjs)
+  scExNames <- isolate(colnames(scEx_log()))
   
   genesin <- input$coE_geneSOM
   res2 = coE_somTrainReact()
@@ -346,6 +347,7 @@ coE_somGenesReact <- reactive({
     save(file = "~/SCHNAPPsDebug/coE_somGenes.RData", list = c(ls()))
   }
   # cp = load(file = "~/SCHNAPPsDebug/coE_somGenes.RData")
+  # browser()
   featureData <- rowData(scEx_log)
   geneName = geneName2Index(genesin, featureData)
   if(length(geneName) == 0) {return(NULL)}
@@ -357,20 +359,20 @@ coE_somGenesReact <- reactive({
   updateNumericInput(session = session, inputId = "coE_dimSOMY", value = as.integer(idxY))
   idx = which(sommap$grid$pts[,1] == (res2$globalBmus[geneName, 1] + 1) & sommap$grid$pts[,2] == (res2$globalBmus[geneName, 2] + 1) )
   
-  rd = data.frame(row.names = colnames(scEx_log))
+  rd = data.frame(row.names = scExNames)
   cn = glue("som_{idxX}_{idxY}")
   rd[,cn ] = 0
   rd[colnames(res2$codebook),  ] = res2$codebook[idx, ]
   
   if (ncol(prjs) > 0) {
-    prjs <- prjs[colnames(scEx_log), ,drop = FALSE]
+    # prjs <- prjs[colnames(scEx_log), ,drop = FALSE]
     
-    if (cn %in% colnames(prjs)) {
-      prjs[, cn] <- rd[, cn]
-    } else {
-      prjs <- base::cbind(prjs, rd[, cn,drop = FALSE], deparse.level = 0)
-      colnames(prjs)[ncol(prjs)] <- cn
-    }
+    # if (cn %in% colnames(prjs)) {
+      prjs[rownames(rd), cn] <- rd[, cn, drop =F]
+    # } else {
+    #   prjs <- base::cbind(prjs, rd[, cn,drop = FALSE], deparse.level = 0)
+    #   colnames(prjs)[ncol(prjs)] <- cn
+    # }
     
     
   }else {
@@ -404,7 +406,7 @@ coE_heatmapSOMReactive <- reactive({
     removeNotification(id = "heatmapWarning")
   }
   
-  scEx_log <- scEx_log()
+  scEx_log <- isolate(scEx_log())
   projections <- isolate(projections())
   # input$updateSOMParameters
   sampCol <- sampleCols$colPal

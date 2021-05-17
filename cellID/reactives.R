@@ -50,7 +50,7 @@ cellIdReactive <- reactive({
            scEx_log = RunMCUMAP(scEx_log, dims =  seq(nmcs))
          }
          )
-  
+  # browser()
   rd = reducedDim(scEx_log, "MCA")[colnames(scEx_log),]
   if (ncol(prjs) > 0) {
     prjs <- prjs[colnames(scEx_log), ]

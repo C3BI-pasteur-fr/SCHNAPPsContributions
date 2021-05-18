@@ -45,7 +45,12 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
     hues <- seq(15, 375, length = n + 1)
     grDevices::hcl(h = hues, l = 65, c = 100)[1:n]
   }
-  ann_col <- list(Time = RColorBrewer::brewer.pal(5, "RdGy"))
+  if (exists("annotation_colors")) {
+    ann_col <- annotation_colors
+  } else {
+    ann_col <- list(Time = RColorBrewer::brewer.pal(5, "RdGy"))
+  }
+  
   if (!is.null(progression_group)) {
     if (!is.factor(progression_group)) {
       progression_group <- factor(progression_group)

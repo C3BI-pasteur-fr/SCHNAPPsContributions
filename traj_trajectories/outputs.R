@@ -455,6 +455,8 @@ scorpiusHeatmapPlotReactive <- reactive({
   traj <- scorpiusTrajectory()
   expr_sel <- scorpiusExpSel()
   modules <- scorpiusModules()
+  sampCol <- isolate(sampleCols$colPal)
+  ccols <- isolate(clusterCols$colPal)
   
   dimCol <- input$dimScorpiusCol
   # doCalc <- input$scorpiusCalc
@@ -470,7 +472,7 @@ scorpiusHeatmapPlotReactive <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scorpiusHeatmapPlot.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/scorpiusHeatmapPlot.RData")
+  # cp=load(file="~/SCHNAPPsDebug/scorpiusHeatmapPlot.RData")
   
   if (is.null(pixelratio)) pixelratio <- 1
   if (is.null(width)) {
@@ -479,13 +481,19 @@ scorpiusHeatmapPlotReactive <- reactive({
   if (is.null(height)) {
     height <- 96 * 7
   }
+  annCols <- list(
+    "sampleNames" = sampCol,
+    "dbCluster" = ccols
+  )
   
   outfile <- paste0(tempdir(), "/heatmapScorpius", base::sample(1:10000, 1), ".png")
   cat(file = stderr(), paste("saving to: ", outfile, "\n"))
   colnames(expr_sel$expr_sel) = rowData(scEx[colnames(expr_sel$expr_sel),])$symbol
   # modules <- extract_modules(scale_quantile(expr_sel), traj$time, verbose = F)
   retVal <- drawTrajectoryHeatmap(x = expr_sel$expr_sel, time = traj$time, 
-                                  progression_group = projections[rownames(expr_sel$expr_sel), dimCol], modules = modules,
+                                  progression_group = projections[rownames(expr_sel$expr_sel), dimCol], 
+                                  modules = modules, 
+                                  annotation_colors = annCols,
                                   show_labels_row = TRUE, show_labels_col = FALSE,scale_features = TRUE,
                                   filename = normalizePath(outfile, mustWork = FALSE)
   )

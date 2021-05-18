@@ -1092,13 +1092,13 @@ temporaPWProfiles <- reactive({
   }
   BPPARAM=bpparam()
   temporaObj <- temporaImport()
+  gmt_path = isolate(input$temporaGMTFile)
   
-  if(is.null(temporaObj)) {
+  if(is.null(temporaObj) | is.null(gmt_path)) {
     if (DEBUG) cat(file = stderr(), paste("temporaPWProfiles:NULL\n"))
     return(NULL)
   }
   
-  gmt_path = isolate(input$temporaGMTFile)
   min.sz = isolate(input$temporaMinSz)
   max.sz = isolate(input$temporaMaxSz)
   

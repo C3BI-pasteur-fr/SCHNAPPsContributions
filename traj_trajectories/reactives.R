@@ -987,6 +987,24 @@ Tempora_dataInput <- callModule(
   cellSelectionModule,
   "Tempora_dataInput"
 )
+Tempora_scEx_log <- reactive({
+  scEx_log = scEx_log()
+  if(is.null(scEx_log)) return(NULL)
+  
+  selectedCells <- isolate(Tempora_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
+  scEx_log = scEx_log[,cellNs]
+  return(scEx_log)
+})
+Tempora_projections <- reactive({
+  projections <- projections()
+  if (is.null(projections)) return(NULL)
+  selectedCells <- isolate(Tempora_dataInput()) #DE_Exp_dataInput
+  cellNs <- selectedCells$cellNames()
+  if(length(cellNs)<1) return(NULL)
+  projections[cellNs,]
+})
 
 temporaImport <- reactive({
   if (DEBUG) cat(file = stderr(), "temporaImport started.\n")
@@ -1001,14 +1019,14 @@ temporaImport <- reactive({
   }
   clicked <- input$updatetTemporaParameters
   
-  scEx_log <- isolate(scEx_log())
-  projections <- isolate(projections())
+  scEx_log <- isolate(Tempora_scEx_log())
+  projections <- isolate(Tempora_projections())
   tCluster <- isolate(input$temporaCluster)
   tFactor <- isolate(input$temporaFactor)
   tLevels <- isolate(input$temporaLevels)
-  selectedCells <- isolate(Tempora_dataInput()) #DE_Exp_dataInput
-  cellNs <- selectedCells$cellNames()
-  if(length(cellNs)<1) return(NULL)
+  # selectedCells <- isolate(Tempora_dataInput()) #DE_Exp_dataInput
+  # cellNs <- selectedCells$cellNames()
+  # if(length(cellNs)<1) return(NULL)
   
   if (is.null(scEx_log) | is.null(projections)) {
     if (DEBUG) cat(file = stderr(), paste("temporaImport:NULL\n"))
@@ -1031,8 +1049,8 @@ temporaImport <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/temporaImport.RData", list = c(ls()),compress = F)
   }
-  # cp = load(file="~/SCHNAPPsDebug/temporaImport.RData")
-  scEx_log = scEx_log[,cellNs]
+  # cp = load(file="~/debug/temporaImport.RData")
+  # scEx_log = scEx_log[,cellNs]
   colData(scEx_log) <- S4Vectors::DataFrame(projections[rownames(colData(scEx_log)),])
   # HACK
   # TODO

@@ -1001,7 +1001,7 @@ temporaImport <- reactive({
   }
   clicked <- input$updatetTemporaParameters
   
-  scEx_log <- isolate(scEx_log())
+  scEx_log <- isolate(Elpi_scEx_log())
   projections <- isolate(projections())
   tCluster <- isolate(input$temporaCluster)
   tFactor <- isolate(input$temporaFactor)

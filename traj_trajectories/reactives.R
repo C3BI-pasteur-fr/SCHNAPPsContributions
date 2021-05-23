@@ -982,6 +982,8 @@ elpiModulesTable <- reactive({
 })
 
 
+###################
+# TEMPORA ---------
 # temporaImport ----
 Tempora_dataInput <- callModule(
   cellSelectionModule,
@@ -1021,9 +1023,9 @@ temporaImport <- reactive({
   
   scEx_log <- isolate(Tempora_scEx_log())
   projections <- isolate(Tempora_projections())
-  tCluster <- isolate(input$temporaCluster)
-  tFactor <- isolate(input$temporaFactor)
-  tLevels <- isolate(input$temporaLevels)
+  tCluster <- isolate(input$temporaCluster) # clusters to use
+  tFactor <- isolate(input$temporaFactor) # time variable
+  tLevels <- isolate(input$temporaLevels) # time points
   # selectedCells <- isolate(Tempora_dataInput()) #DE_Exp_dataInput
   # cellNs <- selectedCells$cellNames()
   # if(length(cellNs)<1) return(NULL)
@@ -1061,7 +1063,18 @@ temporaImport <- reactive({
   #   setMethod("getMD","SingleCellExperiment",
   #             function(x) data.frame(SingleCellExperiment::colData(x)))
   # )
-  
+  tcl = table(colData(scEx_log)[, tCluster])
+  for( tIdx in which(tcl <2) ) {
+    if (!is.null(getDefaultReactiveDomain())) {
+      showNotification(paste("temporaWarning: ", names(tcl)[[tIdx]]),
+                       id = "temporaImport",
+                       type = "warning", duration = NULL)
+    }
+    # warning that we are removing things
+    scEx_log[,!colData(scEx_log)[,tCluster] == tIdx]
+    # to remove empty levels
+    colData(scEx_log)[,tCluster] = factor(colData(scEx_log)[,tCluster])
+  }
   # We only work with the levels that are given. 
   scEx_log = scEx_log[,colData(scEx_log)[,tFactor] %in% tLevels]
   #in case there are levels where there are no data we have to update this

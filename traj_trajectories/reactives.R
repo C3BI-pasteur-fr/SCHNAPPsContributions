@@ -422,6 +422,9 @@ elpiTreeData <- reactive({
     return(t(as.matrix(assays(scEx)[[1]])))
   }
   if (dimElpi == "components") {
+    if (!dim1 %in% colnames(projections) | !dim2 %in% colnames(projections)) {
+      return(NULL)
+    }
     return(as.matrix(projections[,c(dim1,dim2)]))
   }
   cat(file = stderr(), "elpiTreeData should not happen\n")

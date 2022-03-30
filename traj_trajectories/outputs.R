@@ -28,12 +28,12 @@ observe(label = "ob20sc", {
     prjs <- sessionProjections$prjs
   })
   
-  if (is.null(scEx_log) || is.null(traj)) {
+  if (any(is.null(scEx_log) | is.null(traj))) {
     return(NULL)
   }
-  if (.schnappsEnv$DEBUGSAVE) {
+  # if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/observeScorpiusProj.RData", list = c(ls()))
-  }
+  # }
   # cp = load(file="~/SCHNAPPsDebug/observeScorpiusProj.RData")
   cn <- "traj_scorpius"
   # if (cn %in% colnames(prjs)) {
@@ -581,10 +581,10 @@ elpiHeatmapPlotReactive <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("elpiHeatmapPlotReactive", id = "elpiHeatmapPlotReactive", duration = NULL)
   }
-  
+  clicked <- input$elpiCalc
+  if( clicked < 1) return(NULL)
   # upI <- updateScorpiusInput() # needed to update input
   scEx = Elpi_scEx()
-  clicked <- input$elpiCalc
   projections <- Elpi_projections()
   psTime <- traj_getPseudotime()
   expr_sel <- traj_elpi_gimp()

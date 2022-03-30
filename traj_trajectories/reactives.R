@@ -575,15 +575,21 @@ traj_getPseudotime <- reactive({
   
   set.seed(seed)
   # computing a Partition structure
-  PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions)
-  
-  # projection structure
-  ProjStruct <- ElPiGraph.R::project_point_onto_graph(X = tree_data,
-                                                      NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions,
-                                                      Edges = TreeEPG[[length(TreeEPG)]]$Edges$Edges,
-                                                      Partition = PartStruct$Partition)
-  psTime = ElPiGraph.R::getPseudotime(ProjStruct = ProjStruct, NodeSeq = names(tragetPath[[1]]))
-  
+  psTime = tryCatch({
+    PartStruct <- ElPiGraph.R::PartitionData(X = tree_data, NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions)
+    
+    # projection structure
+    ProjStruct <- ElPiGraph.R::project_point_onto_graph(X = tree_data,
+                                                        NodePositions = TreeEPG[[length(TreeEPG)]]$NodePositions,
+                                                        Edges = TreeEPG[[length(TreeEPG)]]$Edges$Edges,
+                                                        Partition = PartStruct$Partition)
+    psTime = ElPiGraph.R::getPseudotime(ProjStruct = ProjStruct, NodeSeq = names(tragetPath[[1]]))
+    psTime
+  },
+  error = function(e) {
+    cat(file = stderr(), e)
+    return(NULL)
+  })
   # writeShaCache(moduleName = "traj_getPseudotime", 
   #               moduleParameters = list(scEx_log_sha, TreeEPG,
   #                                       tree_data, targetPathSha,
@@ -656,7 +662,14 @@ traj_elpi_modules <- reactive({
   
   ## Group the genes into modules and visualise the modules in a heatmap
   # group_name should be dbCluster or other selectable option
-  modules <- SCORPIUS::extract_modules(SCORPIUS::scale_quantile(expr_sel))
+  modules <- tryCatch(
+    SCORPIUS::extract_modules(SCORPIUS::scale_quantile(expr_sel)),
+    error = function(e){
+      save(file = "~/SCHNAPPsDebug/traj_elpi_modules.error.RData", list = c(ls(),ls(envir = parent.env())))
+      return(NULL)
+    })
+  
+  if (is.null(modules)) return(NULL)
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
   modules$symbol <- fd[modules$feature, "symbol"]
@@ -1289,7 +1302,7 @@ temporaPvalModulesTable <- reactive({
   }
   # cp = load(file="~/SCHNAPPsDebug/temporaPvalModulesTable.RData")
   
-  outTable = data.frame(goTerm = names(temporaObj@varying.pws))
+  outTable = data.frame(goTerm = names(temporaObj@varying.pws), stringsAsFactors = F)
   outTable$pValues = temporaObj@varying.pws
   
   return(outTable)

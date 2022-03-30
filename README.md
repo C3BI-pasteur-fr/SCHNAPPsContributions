@@ -1,6 +1,5 @@
 # SCHNAPPsContributions #
 
-=====================
 
 some contributions to the SCHNAPPs project (https://c3bi-pasteur-fr.github.io/UTechSCB-SCHNAPPs/)
 

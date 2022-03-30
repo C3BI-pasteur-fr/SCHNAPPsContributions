@@ -3,6 +3,9 @@ suppressMessages(require(Rsomoclu))
 suppressMessages(require(kohonen))
 require(glue)
 
+packagePath <- find.package("SCHNAPPs", lib.loc = NULL, quiet = TRUE) %>% paste0("/app/")
+source(paste0(packagePath, "/serverFunctions.R"), local = TRUE)
+
 # source("~/Rstudio/UTechSCB-SCHNAPPs/inst/app/serverFunctions.R")
 # library(SCHNAPPs)
 # library(shiny)
@@ -355,20 +358,23 @@ coE_somGenesReact <- reactive({
   
   idxX = res2$globalBmus[geneName, 1] + 1
   idxY = res2$globalBmus[geneName, 2] + 1
-  updateNumericInput(session = session, inputId = "coE_dimSOMX",  value = as.integer(idxX))
-  updateNumericInput(session = session, inputId = "coE_dimSOMY", value = as.integer(idxY))
+  if (!is.null(getDefaultReactiveDomain())) {
+    updateNumericInput(session = session, inputId = "coE_dimSOMX",  value = as.integer(idxX))
+    updateNumericInput(session = session, inputId = "coE_dimSOMY", value = as.integer(idxY))
+  }
   idx = which(sommap$grid$pts[,1] == (res2$globalBmus[geneName, 1] + 1) & sommap$grid$pts[,2] == (res2$globalBmus[geneName, 2] + 1) )
   
   rd = data.frame(row.names = scExNames)
   cn = glue("som_{idxX}_{idxY}")
   rd[,cn ] = 0
+  prjs$cn 
   rd[colnames(res2$codebook),  ] = res2$codebook[idx, ]
   
   if (ncol(prjs) > 0) {
     # prjs <- prjs[colnames(scEx_log), ,drop = FALSE]
     
     # if (cn %in% colnames(prjs)) {
-      prjs[rownames(rd), cn] <- rd[, cn, drop =F]
+    prjs[rownames(rd), cn] <- rd[, cn, drop =F]
     # } else {
     #   prjs <- base::cbind(prjs, rd[, cn,drop = FALSE], deparse.level = 0)
     #   colnames(prjs)[ncol(prjs)] <- cn
@@ -376,7 +382,7 @@ coE_somGenesReact <- reactive({
     
     
   }else {
-    prjs <- rd
+    prjs <- as.data.frame(rd)
   }
   sessionProjections$prjs <- prjs
   

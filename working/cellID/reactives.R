@@ -51,7 +51,7 @@ cellIdReactive <- reactive({
          }
          )
   # browser()
-  rd = reducedDim(scEx_log, "MCA")[colnames(scEx_log),]
+  rd = as.data.frame( reducedDim(scEx_log, "MCA")[colnames(scEx_log),])
   if (ncol(prjs) > 0) {
     prjs <- prjs[colnames(scEx_log), ]
     for (cn in colnames(rd)) {
@@ -64,7 +64,7 @@ cellIdReactive <- reactive({
     }
     
   }else {
-    prjs <- rd
+    prjs <- as.data.frame( rd)
   }
   sessionProjections$prjs <- prjs
   

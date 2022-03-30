@@ -1,6 +1,54 @@
-# SCHNAPPsContributions
+# SCHNAPPsContributions #
+
+=====================
+
 some contributions to the SCHNAPPs project (https://c3bi-pasteur-fr.github.io/UTechSCB-SCHNAPPs/)
 
+## Trajectory related contributions
+
+### Tempora: cell trajectory inference using time-series single-cell RNA sequencing data
+
+https://github.com/BaderLab/Tempora
+https://www.baderlab.org/Software/Tempora
+
+Tempora is a novel cell trajectory inference method that orders cells using time information from time-series scRNAseq data. Tempora uses biological pathway information to help identify cell type relationships and can identify important time-dependent pathways to help interpret the inferred trajectory.
+
+### scorpius
+
+https://github.com/rcannood/SCORPIUS
+https://www.biorxiv.org/content/10.1101/079509v2
+
+SCORPIUS an unsupervised approach for inferring linear developmental chronologies from single-cell RNA sequencing data. 
+
+### ELPIGraph Elastic principal graphs
+
+https://github.com/Albluca/ElPiGraph.R
+
+The mapping of a principal graph into multidimensional data space is regularized by minimizing the stretching of the graph edges and the deviation from harmonicity for the graph stars.
+
+
+## CelliD
+
+https://github.com/RausellLab/CelliD
+
+[Gene signature extraction and cell identity recognition at the single-cell level with Cell-ID, Nature Biotechnology 2021](https://rdcu.be/cjFWE)
+
+CelliD is a robust statistical method that performs gene signature extraction and functional annotation for each individual cell in a single-cell RNA-seq dataset.
+
+## Self-organizing Maps (SOM) based on the Rsomoclu, and kohonen packages.
+
+Unsupervised clustering of genes.
+
+
+## scDEA 
+
+https://github.com/Zhangxf-ccnu/scDEA
+
+https://pubmed.ncbi.nlm.nih.gov/34571530/
+
+applies ensemble learning for single-cell differential expression analysis on single-cell RNA-seq dataset.
+
+This is actually implemented in the main up, but only available if scDEA is installed. Since it is very heavy computationally it is documented only here.
 
 # Prepare data for SCHNAPPs
 

@@ -104,7 +104,7 @@ drawTrajectoryHeatmap <- function(x, time, progression_group = NULL, modules = N
 
 # scorpiuseParameters ----
 # herewith we control that scorpius is only run if the button is pressed.
-scorpiuseParameters <- reactiveValues()
+# scorpiuseParameters <- reactiveValues()
 Scorpius_dataInput <- callModule(
   cellSelectionModule,
   "Scorpius_dataInput"
@@ -116,6 +116,7 @@ Scorpius_scEx_log <- reactive({
   if(is.null(scEx_log)) return(NULL)
   # browser()
   selectedCells <- isolate(Scorpius_dataInput()) #DE_Exp_dataInput
+  if(is.null(selectedCells)) return(NULL)
   cellNs <- selectedCells$cellNames()
   if(length(cellNs)<1) return(NULL)
   scEx_log = scEx_log[,cellNs]
@@ -126,6 +127,7 @@ scorpius_projections <- reactive({
   projections <- projections()
   if (is.null(projections)) return(NULL)
   selectedCells <- isolate(Scorpius_dataInput()) #DE_Exp_dataInput
+  if(is.null(selectedCells)) return(NULL)
   cellNs <- selectedCells$cellNames()
   if(length(cellNs)<1) return(NULL)
   projections[cellNs,]
@@ -181,10 +183,10 @@ scorpiusSpace <- reactive({
   }
   
   
-  # doCalc <- input$scorpiusCalc
-  dimX <- scorpiuseParameters$dimX
-  dimY <- scorpiuseParameters$dimY
-  scInput <- scorpiuseParameters$scInput
+  doCalc <- input$updatetScorpiusParameters
+  dimX <- isolate(input$dimScorpiusX)
+  dimY <- isolate(input$dimScorpiusY)
+  scInput <- isolate(scorpiusInput())
   projections <- scorpius_projections()
   
   if (!is.null(scInput)) {
@@ -197,7 +199,7 @@ scorpiusSpace <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scorpiusSpace.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/scorpiusSpace.RData")
+  # cp=load(file="~/SCHNAPPsDebug/scorpiusSpace.RData")
   
   space <- projections[, c(dimX, dimY)]
   
@@ -222,8 +224,12 @@ scorpiusTrajectory <- reactive({
   # only execute if button is pressed
   clicked = input$updatetScorpiusParameters
   cat(file = stderr(), paste("scorpiusTrajectory clicked:", clicked,"\n"))
+  # browser()
   # create dependancy on button and return if not pressed once
   if (input$updatetScorpiusParameters == 0) {
+    # when coming from history
+    if(!is.null(.schnappsEnv$react.scorpiusTrajectory))
+      return(.schnappsEnv$react.scorpiusTrajectory$path)
     return(NULL)
   }
   
@@ -235,7 +241,7 @@ scorpiusTrajectory <- reactive({
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scorpiusTrajectory.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/scorpiusTrajectory.RData")
+  # cp=load(file="~/SCHNAPPsDebug/scorpiusTrajectory.RData")
   if (!is.null(scInput)) {
     return(scInput)
   }
@@ -247,8 +253,15 @@ scorpiusTrajectory <- reactive({
     if (DEBUG) cat(file = stderr(), paste("scorpiusTrajectory:NULL; need more samples/columns\n"))
     return(NULL)
   }
-  require(SCORPIUS)
-  traj <- SCORPIUS::infer_trajectory(space)
+  require(SCORPIUSbj)
+  dig = digest(space, algo = "sha256")
+  if(!is.null(.schnappsEnv$react.scorpiusTrajectory) & length(.schnappsEnv$react.scorpiusTrajectory)==2){
+    if (dig == .schnappsEnv$react.scorpiusTrajectory[[1]]){
+      return(.schnappsEnv$react.scorpiusTrajectory$path)
+    }
+  }
+  
+  traj <- SCORPIUSbj::infer_trajectory(space,thresh = 0.00001)
   traj$path = data.frame(traj$path)
   traj$path$idx <- 1:nrow(traj$path)
   traj$path <- traj$path[order(traj$time),] 
@@ -258,7 +271,7 @@ scorpiusTrajectory <- reactive({
   traj$path = traj$path[, -3]
   # rownames(traj$path) == names(traj$time)
   
-  
+  .schnappsEnv$react.scorpiusTrajectory = list(digest = dig, path = traj$path)
   return(traj$path)
 })
 
@@ -284,13 +297,16 @@ scorpiusExpSel <- reactive({
   
   # create dependancy on button and return if not pressed once
   if (input$updatetScorpiusParameters == 0) {
+    # when coming from history
+    if(!is.null(.schnappsEnv$react.scorpiusExpSel))
+      return(.schnappsEnv$react.scorpiusExpSel[[2]])
     return(NULL)
   }
   scEx_log <- isolate(Scorpius_scEx_log())
   traj <- isolate(scorpiusTrajectory())
   # doCalc <- input$scorpiusCalc
-  scorpMaxGenes <- scorpiuseParameters$scorpMaxGenes
-  scorpRepeat <- scorpiuseParameters$scorpRepeat
+  scorpMaxGenes <- isolate(input$scorpMaxGenes)
+  scorpRepeat <- isolate(input$scorpRepeat)
   
   if (is.null(traj) | is.null(scEx_log) | is.null(traj)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusExpSel:NULL\n"))
@@ -300,9 +316,15 @@ scorpiusExpSel <- reactive({
     save(file = "~/SCHNAPPsDebug/scorpiusExpSel.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/scorpiusExpSel.RData")
-  cellsNotFound <- colnames(assays(scEx_log)[[1]])[!colnames(assays(scEx_log)[[1]]) %in% rownames(traj)]
+  # cellsNotFound <- colnames(assays(scEx_log)[[1]])[!colnames(assays(scEx_log)[[1]]) %in% rownames(traj)]
+  dig = digest(list(assays(scEx_log)[[1]][,rownames(traj)], traj$time, scorpRepeat), algo = "sha256")
+  if(!is.null(.schnappsEnv$react.scorpiusExpSel))
+    if(dig == .schnappsEnv$react.scorpiusExpSel[[1]]) {
+      return(.schnappsEnv$react.scorpiusExpSel[[2]])
+    }
   expression <- t(as.matrix(assays(scEx_log)[[1]][,rownames(traj)]))
-  gimp <- gene_importances(expression[rownames(traj),], traj$time, num_permutations = scorpRepeat, num_threads = detectCores())
+  gimp <- gene_importances(expression[rownames(traj),], traj$time, num_permutations = scorpRepeat, 
+                           num_threads = detectCores())
   maxRow <- min(scorpMaxGenes, nrow(gimp))
   gene_sel <- gimp[1:maxRow, ]
   expr_sel <- expression[, gene_sel$gene]
@@ -310,6 +332,7 @@ scorpiusExpSel <- reactive({
   # rownames(dfTmp) = cellsNotFound
   # colnames(dfTmp) = colnames(expr_sel)
   # retVal = rbind(expr_sel,dfTmp)
+  .schnappsEnv$react.scorpiusExpSel = list(dig, list(expr_sel = expr_sel, gene_sel = gene_sel))
   return(list(expr_sel = expr_sel, gene_sel = gene_sel))
 })
 
@@ -328,34 +351,35 @@ scorpiusModules <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     removeNotification( id = "scorpiusModulesWARNING")
   }
+  # browser()
   
-  # create dependancy on button and return if not pressed once
-  if (input$updatetScorpiusParameters == 0) {
-    return(NULL)
-  }
   
   # browser()
   scEx_log <- isolate(Scorpius_scEx_log())
   # projections = projections()
   # space <- scorpiusSpace()
-  traj <- isolate(scorpiusTrajectory())
-  expr_sel <- isolate(scorpiusExpSel())
+  traj <- scorpiusTrajectory()
+  expr_sel <- scorpiusExpSel()
   
-  # scorpiusModules = scorpiusModules()
-  # upI <- updateScorpiusInput() # needed to update input
-  dimX <- scorpiuseParameters$dimX
-  dimY <- scorpiuseParameters$dimY
-  # dimCol = input$dimScorpiusCol
-  # doCalc <- input$scorpiusCalc
-  
-  if (is.null(traj) | is.null(scEx_log)) {
+  if (is.null(traj) | is.null(scEx_log)| is.null(expr_sel)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
     return(NULL)
   }
+  
+  dig = digest(list(expr_sel$expr_sel, traj$time), algo = "sha256") 
+  
+  # create dependancy on button and return if not pressed once
+  if (input$updatetScorpiusParameters == 0) {
+    # when coming from history
+    if(!is.null(.schnappsEnv$react.scorpiusModules))
+      return(.schnappsEnv$react.scorpiusModules[[2]])
+    return(NULL)
+  }
+  
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scorpiusModules.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/scorpiusModules.RData")
+  # cp =load(file="~/SCHNAPPsDebug/scorpiusModules.RData")
   
   # space = projections[,c(dimX, dimY)]
   # traj <- infer_trajectory(space)
@@ -364,11 +388,33 @@ scorpiusModules <- reactive({
   # gene_sel <- gimp[1:50,]
   # expr_sel <- t(expression)[,gene_sel$gene]
   
-  modules <- extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)
+  # modules <- extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)
+  if(!is.null(.schnappsEnv$react.scorpiusModules))
+    if(dig == .schnappsEnv$react.scorpiusModules[[1]]) {
+      return(.schnappsEnv$react.scorpiusModules[[2]])
+    }
+  modules = tryCatch ({extract_modules(scale_quantile(expr_sel$expr_sel), traj$time, verbose = T)},
+                      error = function(e) {
+                        cat(file = stderr(), paste("ERROR: extract_modules",e))
+                        save(file = "~/SCHNAPPsDebug/scorpiusModulesError.RData", list = c(ls(),"expr_sel", "traj"))
+                        if (!is.null(getDefaultReactiveDomain())) {
+                          showNotification("GSEABase::getGmt not a valid file", 
+                                           id = "scorpius.ERROR", type = "error", duration = NULL)
+                        }
+                        return(NULL)
+                      })
+  if(is.null(modules)) {
+    return(NULL)
+  }
+  
+  
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
   modules$symbol <- fd[modules$feature, "symbol"]
   rownames(modules) <- make.unique(as.character(modules$symbol, sep = "___"))
+  
+  .schnappsEnv$react.scorpiusModules = list(digest = dig, modules = modules)
+  
   return(modules)
 })
 
@@ -388,6 +434,9 @@ scorpiusModulesTable <- reactive({
   
   # create dependancy on button and return if not pressed once
   if (input$updatetScorpiusParameters == 0) {
+    # when coming from history
+    if(!is.null(.schnappsEnv$react.scorpiusModulesTable))
+      return(.schnappsEnv$react.scorpiusModulesTable[[2]])
     return(NULL)
   }
   
@@ -400,19 +449,19 @@ scorpiusModulesTable <- reactive({
   
   # scorpiusModules = scorpiusModules()
   # upI <- updateScorpiusInput() # needed to update input
-  dimX <- scorpiuseParameters$dimX
-  dimY <- scorpiuseParameters$dimY
+  dimX <- isolate(input$dimScorpiusX)
+  dimY <- isolate(input$dimScorpiusY)
   # dimCol = input$dimScorpiusCol
   # doCalc <- input$scorpiusCalc
-  
-  if (is.null(traj) | is.null(scEx_log)) {
-    if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
-    return(NULL)
-  }
+  dig = digest(list(scEx_log, traj, expr_sel, modules, dimX, dimY), algo = "sha256")
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scorpiusModulesTable.RData", list = c(ls()))
   }
-  # load(file="~/SCHNAPPsDebug/scorpiusModulesTable.RData")
+  if (is.null(traj) | is.null(scEx_log)| is.null(expr_sel)) {
+    if (DEBUG) cat(file = stderr(), paste("scorpiusModules:NULL\n"))
+    return(NULL)
+  }
+  # cp= load(file="~/SCHNAPPsDebug/scorpiusModulesTable.RData")
   # space = projections[,c(dimX, dimY)]
   # traj <- infer_trajectory(space)
   # expression = as.matrix(exprs(scEx_log))
@@ -423,7 +472,12 @@ scorpiusModulesTable <- reactive({
   gene_selDF <- as.data.frame(expr_sel$gene_sel)
   rownames(gene_selDF) = gene_selDF[,1]
   gene_selDF = gene_selDF[,-1]
-  return(cbind(modules,gene_selDF[modules$feature,]))
+  if(is.null(modules))
+    retVal = gene_selDF[modules$feature,]
+  else
+    retVal = cbind(modules,gene_selDF[modules$feature,])
+  .schnappsEnv$react.scorpiusModulesTable = list(dig = dig, retVal)
+  return(retVal)
 })
 
 
@@ -442,7 +496,10 @@ Elpi_scEx_log <- reactive({
   if(is.null(scEx_log)) return(NULL)
   
   selectedCells <- isolate(Elpi_dataInput()) #DE_Exp_dataInput
+  if(is.null(selectedCells)) return(NULL)
+  # browser()
   cellNs <- selectedCells$cellNames()
+  if(is.null(cellNs)) return(NULL)
   if(length(cellNs)<1) return(NULL)
   scEx_log = scEx_log[,cellNs]
   return(scEx_log)
@@ -452,15 +509,18 @@ Elpi_scEx <- reactive({
   if(is.null(scEx)) return(NULL)
   
   selectedCells <- isolate(Elpi_dataInput()) #DE_Exp_dataInput
+  if(is.null(selectedCells)) return(NULL)
   cellNs <- selectedCells$cellNames()
   if(length(cellNs)<1) return(NULL)
   scEx = scEx[,cellNs]
   return(scEx)
 })
+
 Elpi_projections <- reactive({
   projections <- projections()
   if (is.null(projections)) return(NULL)
   selectedCells <- isolate(Elpi_dataInput()) #DE_Exp_dataInput
+  if(is.null(selectedCells)) return(NULL)
   cellNs <- selectedCells$cellNames()
   if(length(cellNs)<1) return(NULL)
   projections[cellNs,]
@@ -641,6 +701,14 @@ traj_elpi_modules <- reactive({
   # This button will invalidate this reactive and restart checking of cache.
   # input$elpi_modules_check
   
+  if (clicked == 0) {
+    # when coming from history
+    if(!is.null(.schnappsEnv$react.traj_elpi_modules) & length(.schnappsEnv$react.traj_elpi_modules)==2)
+      return(.schnappsEnv$react.traj_elpi_modules[[2]])
+    return(NULL)
+  }
+  
+  
   if (is.null(scEx_log) | is.null(gene_sel) | elpimode=="computeElasticPrincipalCircle" ) {
     cat(file = stderr(), "--- traj_elpi_modules: NULL\n")
     return(NULL)
@@ -659,11 +727,21 @@ traj_elpi_modules <- reactive({
   
   ## Group the genes into modules and visualise the modules in a heatmap
   # group_name should be dbCluster or other selectable option
-  modules <- SCORPIUS::extract_modules(SCORPIUS::scale_quantile(expr_sel))
+  dig = digest(list(expr_sel), algo = "sha256")
+  
+  if(!is.null(.schnappsEnv$react.traj_elpi_modules) & length(.schnappsEnv$react.traj_elpi_modules)==2){
+    if (dig == .schnappsEnv$react.traj_elpi_modules[[1]]){
+      return(.schnappsEnv$react.traj_elpi_modules[[2]])
+    }
+  }
+  
+  modules <- SCORPIUSbj::extract_modules(SCORPIUS::scale_quantile(expr_sel))
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
   modules$symbol <- fd[modules$feature, "symbol"]
   rownames(modules) <- make.unique(as.character(modules$symbol, sep = "___"))
+  
+  .schnappsEnv$react.traj_elpi_modules = list(digest = dig, retVal = modules)
   
   return(modules)
 })
@@ -694,7 +772,16 @@ traj_elpi_gimp <- reactive({
   nGenes <- input$elpi_nGenes
   seed <- isolate(input$elpiSeed)
   
-  if (is.null(scEx_log) || is.null(psTime) || elpimode=="computeElasticPrincipalCircle") {
+  # create dependancy on button and return if not pressed once
+  if (clicked == 0) {
+    # when coming from history
+    if(!is.null(.schnappsEnv$react.traj_elpi_gimp) & length(.schnappsEnv$traj_elpi_gimp)==2)
+      return(.schnappsEnv$react.traj_elpi_gimp[[2]])
+    return(NULL)
+  }
+  
+  
+  if (is.null(scEx_log) | is.null(psTime) | elpimode=="computeElasticPrincipalCircle") {
     cat(file = stderr(), "--- traj_elpi_gimp: NULL\n")
     return(NULL)
   }
@@ -704,13 +791,21 @@ traj_elpi_gimp <- reactive({
   # load(file="~/SCHNAPPsDebug/traj_elpi_gimp.RData")
   
   set.seed(seed)
-  require(SCORPIUS)
+  require(SCORPIUSbj)
   logCounts <- as.matrix(assays(scEx_log)[[1]][,which(!is.na(psTime$Pt))])
   pst = psTime$Pt[which(!is.na(psTime$Pt))]
-  geneImport <- SCORPIUS::gene_importances(t(logCounts), pst, num_permutations = num_permutations, ntree = ntree,
-                                           ntree_perm = ntree_perm, mtry = ncol(logCounts) * 0.01, num_threads = detectCores()-1)
+  dig = digest(list(logCounts, pst, num_permutations, ntree, ntree_perm), algo = "sha256")
+  if(!is.null(.schnappsEnv$react.traj_elpi_gimp) & length(.schnappsEnv$react.traj_elpi_gimp)==2){
+    if (dig == .schnappsEnv$react.traj_elpi_gimp[[1]]){
+      return(.schnappsEnv$react.traj_elpi_gimp[[2]])
+    }
+  }
+  geneImport <- SCORPIUSbj::gene_importances(t(logCounts), pst, num_permutations = num_permutations, ntree = ntree,
+                                             ntree_perm = ntree_perm, mtry = ncol(logCounts) * 0.01, num_threads = detectCores()-1)
   gene_sel <- geneImport[1:nGenes,]
   expr_sel <- t(logCounts)[, gene_sel$gene]
+  
+  .schnappsEnv$react.traj_elpi_gimp = list(digest = dig, retVal = list(expr_sel = expr_sel, gene_sel = gene_sel))
   
   return(list(expr_sel = expr_sel, gene_sel = gene_sel))
 })
@@ -879,6 +974,22 @@ elpiGraphCompute <- reactive({
     button = "elpiCalc"
   )
   
+  .schnappsEnv$defaultValues[["dimElpi"]] <- input$dimElpi
+  .schnappsEnv$defaultValues[["dimElpiX"]] <- input$dimElpiX
+  .schnappsEnv$defaultValues[["dimElpiY"]] <- input$dimElpiY
+  .schnappsEnv$defaultValues[["dimElpiCol"]] <- input$dimElpiCol
+  .schnappsEnv$defaultValues[["elpiSeed"]] <- input$elpiSeed
+  .schnappsEnv$defaultValues[["ElpiMethod"]] <- input$ElpiMethod
+  .schnappsEnv$defaultValues[["elpinReps"]] <- input$elpinReps
+  .schnappsEnv$defaultValues[["elpiNumNodes"]] <- input$elpiNumNodes
+  .schnappsEnv$defaultValues[["elpiProbPoint"]] <- input$elpiProbPoint
+  .schnappsEnv$defaultValues[["elpiEndNode"]] <- input$elpiEndNode
+  .schnappsEnv$defaultValues[["elpiStartNode"]] <- input$elpiStartNode
+  .schnappsEnv$defaultValues[["elpi_num_permutations"]] <- input$elpi_num_permutations
+  .schnappsEnv$defaultValues[["elpi_ntree"]] <- input$elpi_ntree
+  .schnappsEnv$defaultValues[["elpi_ntree_perm"]] <- input$elpi_ntree_perm
+  .schnappsEnv$defaultValues[["elpi_nGenes"]] <- input$elpi_nGenes
+  
   return(cep)
 })
 
@@ -985,8 +1096,7 @@ elpiModulesTable <- reactive({
 })
 
 
-###################
-# TEMPORA ---------
+# TEMPORA ----------
 # temporaImport ----
 Tempora_dataInput <- callModule(
   cellSelectionModule,
@@ -1216,6 +1326,16 @@ temporaTrajectory <- reactive({
   })
   # to = temporaObj
   
+  .schnappsEnv$defaultValues[["temporaCluster"]] = isolate(input$temporaCluster)
+  .schnappsEnv$defaultValues[["temporaFactor"]] = isolate(input$temporaFactor)
+  .schnappsEnv$defaultValues[["temporaLevels"]] = isolate(input$temporaLevels)
+  .schnappsEnv$defaultValues[["temporaMinSz"]] = isolate(input$temporaMinSz)
+  .schnappsEnv$defaultValues[["temporaMaxSz"]] = isolate(input$temporaMaxSz)
+  .schnappsEnv$defaultValues[["temporaNPCs"]] = isolate(input$temporaNPCs)
+  .schnappsEnv$defaultValues[["temporaDiff_thresh"]] = isolate(input$temporaDiff_thresh)
+  .schnappsEnv$defaultValues[["temporaPval_thresh"]] = isolate(input$temporaPval_thresh)
+  
+  
   return(temporaObj)
 })
 
@@ -1307,7 +1427,7 @@ tempora2DPlotFunc <- function(temporaObj, projections, dimX, dimY, dimCol) {
   require(ggrepel)
   require(network)
   space <- projections[, c(dimX, dimY)]
-  require(SCORPIUS)
+  require(SCORPIUSbj)
   
   
   # temporaObj@cluster.metadata
@@ -1330,7 +1450,7 @@ tempora2DPlotFunc <- function(temporaObj, projections, dimX, dimY, dimCol) {
       net[x[[2]],x[[1]]] <<- 1
     }
   } )
-  # traj <- SCORPIUS::infer_trajectory(space)
+  # traj <- SCORPIUSbj::infer_trajectory(space)
   n = as.network(net)
   # 
   # gnn = ggnetwork(n, layout = as.matrix(mean.points[,2:3]))

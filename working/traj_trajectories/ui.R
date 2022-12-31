@@ -32,36 +32,36 @@ tabList <- list(
       fluidRow(
         column(
           width = 4,
-          selectInput("dimScorpiusX",
+          sc_selectInput("dimScorpiusX",
                       label = "Component 1",
-                      choices = c("tsne1", "tsne2", "tsne3"),
-                      selected = "tsne1"
+                      choices = defaultValue("dimScorpiusX", "notyet"),
+                      selected = defaultValue("dimScorpiusX", "notyet")
           ),
-          numericInput("scorpRepeat",
+          sc_numericInput("scorpRepeat",
                        label = "number of permutations for random forrest",
                        min = 1, max = 100, step = 1,
-                       value = 3
+                       value = defaultValue("scorpRepeat", 3)
           )
         ),
         column(
           width = 4,
-          selectInput("dimScorpiusY",
+          sc_selectInput("dimScorpiusY",
                       label = "Component 2",
-                      choices = c("tsne1", "tsne2", "tsne3"),
-                      selected = "tsne2"
+                      choices = defaultValue("dimScorpiusY", "notyet"),
+                      selected = defaultValue("dimScorpiusY", "notyet")
           ),
-          numericInput("scorpMaxGenes",
+          sc_numericInput("scorpMaxGenes",
                        label = "max number of Genes",
                        min = 200, max = 20000, step = 10,
-                       value = 500
+                       value = defaultValue("scorpMaxGenes", 500)
           )
         ),
         column(
           width = 4,
-          selectInput("dimScorpiusCol",
+          sc_selectInput("dimScorpiusCol",
                       label = "Color by",
-                      choices = c("sampleNames", "tsne1", "tsne2", "tsne3"),
-                      selected = "sampleNames"
+                      choices = defaultValue("dimScorpiusCol", "notyet"),
+                      selected = defaultValue("dimScorpiusCol", "notyet")
           ),
           fileInput("trajInputFile",
                     "Choose .csv file with trajectory informaiton",
@@ -124,37 +124,37 @@ tabList <- list(
       fluidRow(
         column(
           3,
-          selectInput(
+          sc_selectInput(
             "dimElpiX",
             label = "Component 1",
-            choices = c("tsne1", "tsne2", "tsne3"),
-            selected = "tsne1"
+            choices = defaultValue("dimElpiX", "notyet"),
+            selected = defaultValue("dimElpiX", "notyet")
           )
         ),
         column(
           3,
-          selectInput(
+          sc_selectInput(
             "dimElpiY",
             label = "Component 2",
-            choices = c("tsne1", "tsne2", "tsne3"),
-            selected = "tsne2"
+            choices = defaultValue("dimElpiY", "notyet"),
+            selected = defaultValue("dimElpiY", "notyet")
           )
         ),
         column(
           3,
-          selectInput(
+          sc_selectInput(
             "dimElpiCol",
             label = "Color by",
-            choices = c("dbCluster", "tsne1", "tsne2", "tsne3"),
-            selected = "dbCluster"
+            choices = defaultValue("dimElpiCol", "notyet"),
+            selected = defaultValue("dimElpiCol", "notyet")
           )
         ),
         column(
           3,
-          numericInput(
+          sc_numericInput(
             inputId = "elpiSeed",
             label = "Seed",
-            value = 9,
+            value = defaultValue("elpiSeed", 9),
             min = 1, max = 1000, step = 1
           )
         )
@@ -162,16 +162,16 @@ tabList <- list(
       fluidRow(
         column(
           3,
-          selectInput(
+          sc_selectInput(
             "dimElpi",
             label = "Dimensions to use",
             choices = c("elpiPCA", "components"),
-            selected = "components"
+            selected = defaultValue("dimElpi", "components")
           )
         ),
         column(
           3,
-          selectInput(
+          sc_selectInput(
             "ElpiMethod",
             label = "Method to use",
             choices = c(
@@ -179,33 +179,33 @@ tabList <- list(
               "computeElasticPrincipalTree",
               "computeElasticPrincipalCircle"
             ),
-            selected = "computeElasticPrincipalTree"
+            selected = defaultValue("ElpiMethod", "computeElasticPrincipalTree")
           )
         ),
         column(
           2,
-          numericInput(
+          sc_numericInput(
             inputId = "elpiNumNodes",
             label = "Number of nodes",
-            value = 20,
+            value = defaultValue("elpiNumNodes", 20),
             min = 10, max = 100, step = 1
           )
         ),
         column(
           2,
-          numericInput(
+          sc_numericInput(
             inputId = "elpinReps",
             label = "Number of repeats",
-            value = 1,
+            value = defaultValue("elpinReps", 1),
             min = 1, max = 50, step = 1
           )
         ),
         column(
           2,
-          numericInput(
+          sc_numericInput(
             inputId = "elpiProbPoint",
             label = "probability of inclusing of a single point for each computation",
-            value = 0.6,
+            value = defaultValue("elpiProbPoint", 0.6),
             min = 0.1, max = 1, step = 0.1
           )
         )
@@ -228,8 +228,8 @@ tabList <- list(
           selectInput(
             inputId = "elpiStartNode",
             label = "start node of trajectory analysis",
-            choices = c(1, 2),
-            selected = 1
+            choices = defaultValue("elpiStartNode", 1),
+            selected = defaultValue("elpiStartNode", 1)
           )
         ),
         column(
@@ -237,40 +237,40 @@ tabList <- list(
           selectInput(
             inputId = "elpiEndNode",
             label = "end node of trajectory analysis",
-            choices = c(1, 2),
-            selected = 2
+            choices = defaultValue("elpiEndNode", 2),
+            selected = defaultValue("elpiEndNode", 2)
           )
         ),
         column(
           2,
-          numericInput(
+          sc_numericInput(
             inputId = "elpi_num_permutations",
             label = "elpi_num_permutations",
-            value = 3
+            value = defaultValue("elpi_num_permutations", 3)
           )
         ),
         column(
           2,
-          numericInput(
+          sc_numericInput(
             inputId = "elpi_ntree",
             label = "elpi_ntree",
-            value = 10000
+            value = defaultValue("elpi_ntree", 10000)
           )
         ),
         column(
           2,
-          numericInput(
+          sc_numericInput(
             inputId = "elpi_ntree_perm",
             label = "elpi_ntree_perm",
-            value = 1000
+            value = defaultValue("elpi_ntree_perm", 1000)
           )
         ),
         column(
           2,
-          numericInput(
+          sc_numericInput(
             inputId = "elpi_nGenes",
             label = "number of output genes",
-            value = 50
+            value = defaultValue("elpi_nGenes", 50)
           )
         )
       ),
@@ -323,20 +323,20 @@ tabList <- list(
                    fluidRow(
                      column(4,
                             offset = 0,
-                            selectInput("temporaCluster", "cluster points to be used",
+                            sc_selectInput("temporaCluster", "cluster points to be used",
                                         choices = c("dbCluster"),
                                         selected = defaultValue("temporaCluster", "dbCluster")
                             )
                      ),
                      column(4,
                             offset = 0,
-                            selectInput("temporaFactor", "time variable",
+                            sc_selectInput("temporaFactor", "time variable",
                                         choices = c("sampleNames", "dbCluster"),
                                         selected = defaultValue("temporaFactor", "sampleNames")
                             )),
                      column(4,
                             offset = 0,
-                            selectInput("temporaLevels", "Ordered time points",
+                            sc_selectInput("temporaLevels", "Ordered time points",
                                         choices = c("AVC","MVE16.5","MV1","MV2"),
                                         multiple = TRUE,
                                         selected = defaultValue("temporaLevels", c("AVC","MVE16.5","MV1","MV2"))
@@ -359,43 +359,43 @@ tabList <- list(
                      ),
                      column(
                        3,
-                       numericInput(
+                       sc_numericInput(
                          inputId = "temporaMinSz",
                          label = "min size of gene sets",
-                         value = 5
+                         value = defaultValue("temporaMinSz", 5)
                        )
                      ),
                      column(
                        3,
-                       numericInput(
+                       sc_numericInput(
                          inputId = "temporaMaxSz",
                          label = "max size of gene sets",
-                         value = 200
+                         value = defaultValue("temporaMaxSz", 200)
                        )
                      )
                    ),
                    fluidRow(column(
                      4,
-                     numericInput(
+                     sc_numericInput(
                        inputId = "temporaNPCs",
                        label = "N PCs to use",
-                       value = 12
+                       value = defaultValue("temporaNPCs", 12)
                      )
                    ),
                    column(
                      4,
-                     numericInput(
+                     sc_numericInput(
                        inputId = "temporaDiff_thresh",
                        label = "Percent of permissible difference",
-                       value = 0.01
+                       value = defaultValue("temporaDiff_thresh", 0.01)
                      )
                    ),
                    column(
                      4,
-                     numericInput(
+                     sc_numericInput(
                        inputId = "temporaPval_thresh",
                        label = "max p-value",
-                       value = 0.5
+                       value = defaultValue("temporaPval_thresh", 0.5)
                      )
                    )
                    ),
@@ -452,17 +452,17 @@ tabList <- list(
                    id = "tabsetTemporaScorpius",
                    fluidRow(column(
                      width = 4,
-                     selectInput("dimTemporaX",
+                     sc_selectInput("dimTemporaX",
                                  label = "Component 1",
-                                 choices = c("tsne1", "tsne2", "tsne3"),
-                                 selected = "tsne1"
+                                 choices = defaultValue("dimTemporaX", "notyet"),
+                                 selected = defaultValue("dimTemporaX", "notyet")
                      )),
                      column(
                        width = 4,
-                       selectInput("dimTemporaY",
+                       sc_selectInput("dimTemporaY",
                                    label = "Component 2",
-                                   choices = c("tsne1", "tsne2", "tsne3"),
-                                   selected = "tsne1"
+                                   choices = defaultValue("dimTemporaY", "notyet"),
+                                   selected = defaultValue("dimTemporaY", "notyet")
                        ))
                    ),
                    br(),
@@ -474,82 +474,7 @@ tabList <- list(
                    br(),
                    actionButton("save2Hist_tempora2dPlot", "save to history"),
                    ######
-                   br(),
-                   # fluidRow(
-                   #   column(
-                   #     width = 12, offset = 1,
-                   #     actionButton("temporaCalc", "apply changes", width = "80%")
-                   #   )
-                   # ),
-                   # br(),
-                   # fluidRow(
-                   #   column(
-                   #     2,
-                   #     selectInput(
-                   #       inputId = "temporaStartNode",
-                   #       label = "start node of trajectory analysis",
-                   #       choices = c(1, 2),
-                   #       selected = 1
-                   #     )
-                   #   ),
-                   #   column(
-                   #     2,
-                   #     selectInput(
-                   #       inputId = "temporaEndNode",
-                   #       label = "end node of trajectory analysis",
-                   #       choices = c(1, 2),
-                   #       selected = 2
-                   #     )
-                   #   ),
-                   #   column(
-                   #     2,
-                   #     numericInput(
-                   #       inputId = "tempora_num_permutations",
-                   #       label = "tempora_num_permutations",
-                   #       value = 3
-                   #     )
-                   #   ),
-                   #   column(
-                   #     2,
-                   #     numericInput(
-                   #       inputId = "tempora_ntree",
-                   #       label = "tempora_ntree",
-                   #       value = 10000
-                   #     )
-                   #   ),
-                   #   column(
-                   #     2,
-                   #     numericInput(
-                   #       inputId = "tempora_ntree_perm",
-                   #       label = "tempora_ntree_perm",
-                   #       value = 1000
-                   #     )
-                   #   ),
-                   #   column(
-                   #     2,
-                   #     numericInput(
-                   #       inputId = "tempora_nGenes",
-                   #       label = "number of output genes",
-                   #       value = 50
-                   #     )
-                   #   )
-                   # ),
-                   # box(
-                   #   which = "plotTempora", width = 12,
-                   #   fluidRow(column(
-                   #     12,
-                   #     # plotOutput("tempora_heatmap", height = "672px")
-                   #     pHeatMapUI("temporaHeatmapPlotModule")
-                   #   )),
-                   #   br(),
-                   #   tags$h3("table"),
-                   #   fluidRow(column(
-                   #     10,
-                   #     offset = 1,
-                   #     tableSelectionUi("temporaTableMod")
-                   #   )),
-                   #   br()
-                   # )
+                   br()
                  )
                  
                  

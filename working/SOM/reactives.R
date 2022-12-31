@@ -3,8 +3,16 @@ suppressMessages(require(Rsomoclu))
 suppressMessages(require(kohonen))
 require(glue)
 
-packagePath <- find.package("SCHNAPPs", lib.loc = NULL, quiet = TRUE) %>% paste0("/app/")
-source(paste0(packagePath, "/serverFunctions.R"), local = TRUE)
+# 
+# if (exists("devscShinyApp")) {
+#   if (devscShinyApp) {
+#     packagePath <- "inst/app"
+#     # setwd("~/Rstudio/UTechSCB-SCHNAPPs/")
+#   }
+# } else {
+#   packagePath <- find.package("SCHNAPPs", lib.loc = NULL, quiet = TRUE) %>% paste0("/app/")
+# }
+# source(paste0(packagePath, "/serverFunctions.R"), local = TRUE)
 
 # source("~/Rstudio/UTechSCB-SCHNAPPs/inst/app/serverFunctions.R")
 # library(SCHNAPPs)
@@ -384,6 +392,7 @@ coE_somGenesReact <- reactive({
   }else {
     prjs <- as.data.frame(rd)
   }
+  # browser()
   sessionProjections$prjs <- prjs
   
   
@@ -510,7 +519,10 @@ coE_heatmapSOMReactive <- reactive({
     ),
     button = "updateSOMParameters"
   )
-  
+  .schnappsEnv$defaultValues[["coE_geneSOM"]] = isolate(input$coE_geneSOM)
+  .schnappsEnv$defaultValues[["coE_dimSOM"]] = nSom
+  .schnappsEnv$defaultValues[["coE_distSOM"]] = isolate(input$coE_distSOM)
+
   exportTestValues(coE_heatmapSOMReactive = {
     retVal
   })

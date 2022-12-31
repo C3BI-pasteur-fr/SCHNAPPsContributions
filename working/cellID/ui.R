@@ -1,3 +1,4 @@
+library(CelliD)
 menuList <- list(
   shinydashboard::menuItem("Cell-ID",
                            icon = icon("dashboard"),
@@ -27,14 +28,15 @@ tabList = list(
                box(width = 12,
                    fluidRow(
                      column(width = 3,
-                            selectizeInput("cellID_Method", "Method to use",
+                            sc_selectizeInput("cellID_Method", "Method to use",
                                            choices = c("MCA", "DMAP", "TSNE", "UMAP"), selected = defaultValue("cellID_Method", 'MCA')
                             )
                      ), 
                      column(width = 3, 
-                            numericInput(inputId = "cellID_nmcs", label = "number of components", value = 20, min = 2)), 
+                            sc_numericInput(inputId = "cellID_nmcs", label = "number of components", 
+                                            value = defaultValue("cellID_nmcs",20), min = 2)), 
                      column(width = 3, 
-                            selectizeInput(inputId = "cellID_gBy", label = "factor to use for grouping", 
+                            sc_selectizeInput(inputId = "cellID_gBy", label = "factor to use for grouping", 
                                            choices = c("dbCluster"), selected = defaultValue("cellID_gBy", "dbCluster")))
                    )
                ),

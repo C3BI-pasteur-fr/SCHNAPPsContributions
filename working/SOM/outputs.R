@@ -34,6 +34,11 @@ observe(label = "ob_somParameter",
           
         })
 
+observe(label = "somxy",{
+  .schnappsEnv$defaultValues[["coE_dimSOMX"]] = input$coE_dimSOMX
+  .schnappsEnv$defaultValues[["coE_dimSOMY"]] = input$coE_dimSOMY
+})
+
 output$coE_SOMcodebook <- renderPlot({
   sommap = coE_somMapReact()
   if (is.null(sommap)) return(NULL)
@@ -44,8 +49,8 @@ output$coE_SOMcodebook <- renderPlot({
 output$coE_SOMcomponents <- renderPlot({
   sommap = coE_somMapReact()
   if (is.null(sommap)) return(NULL)
-
-    plot(sommap, type = "property", property = sommap$codes[[1]][,1],
+  
+  plot(sommap, type = "property", property = sommap$codes[[1]][,1],
        main = colnames(sommap$codes)[1])
 })
 output$coE_SOMuMat <- renderPlot({
@@ -60,6 +65,11 @@ output$coE_somInfo <- renderText({
   idxy = input$coE_dimSOMY - 1
   res2 = coE_somTrainReact()
   
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/coE_somInfo.RData", list = c(ls()))
+  }
+  # cp = load(file = "~/SCHNAPPsDebug/coE_somInfo.RData")
+  
   if (is.null(res2)) {
     return("Genes in neuron\n")
   }
@@ -67,6 +77,33 @@ output$coE_somInfo <- renderText({
   paste("Genes in neuron (", length(which(res2$globalBmus[,1]==idxx & res2$globalBmus[,2]==idxy)), ")\n",
         paste(names(which(res2$globalBmus[,1]==idxx & res2$globalBmus[,2]==idxy)), collapse = ", ", sep = ",")
   )
+  
+})
+
+
+output$coE_somInfoSymbol <- renderText({
+  
+  idxx = input$coE_dimSOMX - 1
+  idxy = input$coE_dimSOMY - 1
+  res2 = coE_somTrainReact()
+  scEx_log = scEx_log()
+  
+  featureData <- rowData(scEx_log)
+  geneName = geneName2Index(genesin, featureData)
+  
+  if (.schnappsEnv$DEBUGSAVE) {
+    save(file = "~/SCHNAPPsDebug/coE_somInfo.RData", list = c(ls()))
+  }
+  # cp = load(file = "~/SCHNAPPsDebug/coE_somInfo.RData")
+  
+  if (is.null(res2)) {
+    return("Genes in neuron\n")
+  }
+  
+  paste("Genes in neuron (", length(which(res2$globalBmus[,1]==idxx & res2$globalBmus[,2]==idxy)), ")\n",
+        paste(featureData[names(which(res2$globalBmus[,1]==idxx & res2$globalBmus[,2]==idxy)), "symbol"], collapse = ", ", sep = ",")
+  )
+  
 })
 
 

@@ -1,7 +1,7 @@
 require(ElPiGraph.R)
 require(plyr)
 library(dplyr)
-
+library(SCORPIUSbj)
 
 
 # Scorpius ----------------------------------------------------------------
@@ -27,7 +27,6 @@ observe(label = "ob20sc", {
   isolate({
     prjs <- sessionProjections$prjs
   })
-  
   if (is.null(scEx_log) || is.null(traj)) {
     return(NULL)
   }
@@ -47,22 +46,22 @@ observe(label = "ob20sc", {
     
     # if (cn %in% colnames(prjs)) {
     prjs[,cn] <- -1
-    prjs[colnames(scEx_log), cn] <- traj$time
+    prjs[rownames(traj), cn] <- traj$time
     # } else {
     #   prjs <- base::cbind(prjs, traj$time, deparse.level = 0)
     #   colnames(prjs)[ncol(prjs)] <- cn
     # }
-    sessionProjections$prjs <- prjs
+    
   } else {
     prjs <- data.frame(row.names = scExNames)
     prjs[,cn] <- -1
     prjs[colnames(scEx_log),cn] <- traj$time
     # colnames(prjs)[ncol(prjs)] <- cn
-    sessionProjections$prjs <- prjs
   }
+  sessionProjections$prjs <- prjs
 })
 
-observe(label = "ob_scorpButton",
+observe(label = "ob_scorpButton",priority = 99,
         {
           if (DEBUG) cat(file = stderr(), "observe ob_scorpButton\n")
           input$updatetScorpiusParameters
@@ -83,9 +82,10 @@ observe(label = "ob_scorpButton",
         })
 
 observe(label = "ob1", {
-  .schnappsEnv$dimScorpiusX <- input$dimScorpiusX
-  .schnappsEnv$dimScorpiusY <- input$dimScorpiusY
-  .schnappsEnv$dimScorpiusCol <- input$dimScorpiusCol
+  if (DEBUG) cat(file = stderr(), "observe ob1 scorpius\n")
+  # .schnappsEnv$dimScorpiusX <- input$dimScorpiusX
+  # .schnappsEnv$dimScorpiusY <- input$dimScorpiusY
+  # .schnappsEnv$dimScorpiusCol <- input$dimScorpiusCol
 })
 # updateScorpiusInput <- reactive({
 observe(label = "ob2", {
@@ -108,16 +108,16 @@ observe(label = "ob2", {
   }
   updateSelectInput(session, "dimScorpiusX",
                     choices = colnames(projections),
-                    selected = .schnappsEnv$dimScorpiusX
+                    selected = defaultValue("dimScorpiusX", "notyet")
   )
   
   updateSelectInput(session, "dimScorpiusY",
                     choices = colnames(projections),
-                    selected = .schnappsEnv$dimScorpiusY
+                    selected = defaultValue("dimScorpiusY", "notyet")
   )
   updateSelectInput(session, "dimScorpiusCol",
                     choices = colnames(projections),
-                    selected = .schnappsEnv$dimScorpiusCol
+                    selected = defaultValue("dimScorpiusCol", "notyet")
   )
   # updateNumericInput(session, "scorpMaxGenes",
   #                   value = 500
@@ -126,64 +126,25 @@ observe(label = "ob2", {
 ## elpi observers ----
 observe(label = "ob3", {
   if (DEBUG) cat(file = stderr(), paste0("observe: dimElpi\n"))
-  .schnappsEnv$dimElpi <- input$dimElpi
 })
-observe(label = "ob4", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiX\n"))
-  .schnappsEnv$dimElpiX <- input$dimElpiX
-})
-observe(label = "ob5", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiY\n"))
-  .schnappsEnv$dimElpiY <- input$dimElpiY
-})
-observe(label = "ob6", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiCol\n"))
-  .schnappsEnv$dimElpiCol <- input$dimElpiCol
-})
-observe(label = "ob7", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpiSeed\n"))
-  .schnappsEnv$elpiSeed <- input$elpiSeed
-})
-observe(label = "ob8", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: ElpiMethod\n"))
-  .schnappsEnv$ElpiMethod <- input$ElpiMethod
-})
-observe(label = "ob9", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpiNumNodes\n"))
-  .schnappsEnv$elpiNumNodes <- input$elpiNumNodes
-})
-observe(label = "ob10", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpinReps\n"))
-  .schnappsEnv$elpinReps <- input$elpinReps
-})
-observe(label = "ob11", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpiProbPoint\n"))
-  .schnappsEnv$elpiProbPoint <- input$elpiProbPoint
-})
-observe(label = "ob12", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpiStartNode", input$elpiStartNode, "\n"))
-  .schnappsEnv$elpiStartNode <- input$elpiStartNode
-})
-observe(label = "ob13", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpiEndNode:", input$elpiEndNode,"\n"))
-  .schnappsEnv$elpiEndNode <- input$elpiEndNode
-})
-observe(label = "ob14", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_num_permutations\n"))
-  .schnappsEnv$elpi_num_permutations <- input$elpi_num_permutations
-})
-observe(label = "ob15", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_ntree\n"))
-  .schnappsEnv$elpi_ntree <- input$elpi_ntree
-})
-observe(label = "ob16", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_ntree_perm\n"))
-  .schnappsEnv$elpi_ntree_perm <- input$elpi_ntree_perm
-})
-observe(label = "ob17", {
-  if (DEBUG) cat(file = stderr(), paste0("observe: elpi_nGenes\n"))
-  .schnappsEnv$elpi_nGenes <- input$elpi_nGenes
-})
+# observe(label = "ob4", {
+#   if (DEBUG) cat(file = stderr(), paste0("observe: dimElpiX\n"))
+#   .schnappsEnv$dimElpi <- input$dimElpi
+#   .schnappsEnv$dimElpiX <- input$dimElpiX
+#   .schnappsEnv$dimElpiY <- input$dimElpiY
+#   .schnappsEnv$dimElpiCol <- input$dimElpiCol
+#   .schnappsEnv$elpiSeed <- input$elpiSeed
+#   .schnappsEnv$ElpiMethod <- input$ElpiMethod
+#   .schnappsEnv$elpinReps <- input$elpinReps
+#   .schnappsEnv$elpiNumNodes <- input$elpiNumNodes
+#   .schnappsEnv$elpiProbPoint <- input$elpiProbPoint
+#   .schnappsEnv$elpiEndNode <- input$elpiEndNode
+#   .schnappsEnv$elpiStartNode <- input$elpiStartNode
+#   .schnappsEnv$elpi_num_permutations <- input$elpi_num_permutations
+#   .schnappsEnv$elpi_ntree <- input$elpi_ntree
+#   .schnappsEnv$elpi_ntree_perm <- input$elpi_ntree_perm
+#   .schnappsEnv$elpi_nGenes <- input$elpi_nGenes
+# })
 
 ## observe traj_endpoints ----
 observe(label = "ob18", {
@@ -194,7 +155,7 @@ observe(label = "ob18", {
   if (is.null(endpoints)) {
     return(NULL)
   }
-  # save endpoint in global variable to make sure that we don't update unnecssarily
+  # # save endpoint in global variable to make sure that we don't update unnecessarily
   if (!is.null(.schnappsEnv$elpiEndpoints) &
       length(endpoints) == length(.schnappsEnv$elpiEndpoints) &
       all(sort(endpoints) == sort(.schnappsEnv$elpiEndpoints))
@@ -220,7 +181,7 @@ observe(label = "ob18", {
 ## observe projections ----
 observe(label = "ob19", {
   projections <- Elpi_projections()
-  
+  projFactors = projFactors()
   # Can use character(0) to remove all choices
   if (is.null(projections)) {
     return(NULL)
@@ -230,46 +191,46 @@ observe(label = "ob19", {
   # Can also set the label and select items
   updateSelectInput(session, "dimElpiX",
                     choices = colnames(projections),
-                    selected = .schnappsEnv$dimElpiX
+                    selected = defaultValue("dimElpiX","tsne1")
   )
   
   updateSelectInput(session, "dimElpiY",
                     choices = colnames(projections),
-                    selected = .schnappsEnv$dimElpiY
+                    selected = defaultValue("dimElpiY","tsne2")
   )
   updateSelectInput(session, "dimElpiCol",
-                    choices = colnames(projections),
-                    selected = .schnappsEnv$dimElpiCol
+                    choices = projFactors,
+                    selected = defaultValue("dimElpiCol","dbCluster")
   )
   updateNumericInput(session, "elpiSeed",
-                     value = .schnappsEnv$elpiSeed
+                     value = defaultValue("elpiSeed",9)
   )
   updateSelectInput(session, "dimElpi",
-                    selected = .schnappsEnv$dimElpi
+                    selected = defaultValue("dimElpi","components")
   )
   updateSelectInput(session, "ElpiMethod",
-                    selected = .schnappsEnv$ElpiMethod
+                    selected = defaultValue("ElpiMethod","computeElasticPrincipalTree")
   )
   updateNumericInput(session, "elpiNumNodes",
-                     value = .schnappsEnv$elpiNumNodes
+                     value = defaultValue("elpiNumNodes",20)
   )
   updateNumericInput(session, "elpinReps",
-                     value = .schnappsEnv$elpinReps
+                     value = defaultValue("elpinReps",1)
   )
   updateNumericInput(session, "elpiProbPoint",
-                     value = .schnappsEnv$elpiProbPoint
+                     value = defaultValue("elpiProbPoint",0.6)
   )
   updateNumericInput(session, "elpi_num_permutations",
-                     value = .schnappsEnv$elpi_num_permutations
+                     value = defaultValue("elpi_num_permutations",3)
   )
   updateNumericInput(session, "elpi_ntree",
-                     value = .schnappsEnv$elpi_ntree
+                     value = defaultValue("elpi_ntree",10000)
   )
   updateNumericInput(session, "elpi_ntree_perm",
-                     value = .schnappsEnv$elpi_ntree_perm
+                     value = defaultValue("elpi_ntree_perm",1000)
   )
   updateNumericInput(session, "elpi_nGenes",
-                     value = .schnappsEnv$elpi_nGenes
+                     value = defaultValue("elpi_nGenes",50)
   )
 })
 ## observeProj ----
@@ -318,43 +279,48 @@ observe(label = "ob20", {
     # didn't find a way to easily overwrite columns
     
     # if (cn %in% colnames(prjs)) {
+    prjs = as.data.frame(prjs)
     prjs[, cn] = -1
     prjs[colnames(scEx_log), cn] <- psTime$Pt
     # } else {
     #   prjs <- base::cbind(prjs[colnames(scEx_log),], psTime$Pt, deparse.level = 0)
     #   colnames(prjs)[ncol(prjs)] <- cn
     # }
-    sessionProjections$prjs <- prjs
   } else {
     prjs <- data.frame(row.names = scExNames)
     prjs[, cn] = -1
     prjs[colnames(scEx_log),cn] <- psTime$Pt
     # colnames(prjs)[ncol(prjs)] <- cn
-    sessionProjections$prjs <- prjs
   }
+  sessionProjections$prjs <- prjs
 })
 
 ## set scorpiuseParameters on button pressed----
 observeEvent(input$updatetScorpiusParameters,{
   # only react on this value
-  cat(file = stderr(), paste("hit button\n"))
+  cat(file = stderr(), paste("hit button updatetScorpiusParameters\n"))
   input$updatetScorpiusParameters
-  scorpiuseParameters$dimX = isolate(input$dimScorpiusX)
-  scorpiuseParameters$dimY = isolate(input$dimScorpiusY)
-  scorpiuseParameters$scInput = isolate(scorpiusInput())
-  scorpiuseParameters$scorpMaxGenes = isolate(input$scorpMaxGenes)
-  scorpiuseParameters$scorpRepeat = isolate(input$scorpRepeat)
+  # scorpiuseParameters$dimX = isolate(input$dimScorpiusX)
+  # scorpiuseParameters$dimY = isolate(input$dimScorpiusY)
+  # scorpiuseParameters$scInput = isolate(scorpiusInput())
+  # scorpiuseParameters$scorpMaxGenes = isolate(input$scorpMaxGenes)
+  # scorpiuseParameters$scorpRepeat = isolate(input$scorpRepeat)
   
   setRedGreenButton(
     vars = list(
-      c("scorpDimX", scorpiuseParameters$dimX),
-      c("scorpDimY", scorpiuseParameters$dimY),
+      c("scorpDimX", isolate(input$dimScorpiusX)),
+      c("scorpDimY", isolate(input$dimScorpiusY)),
       c("scorpMaxGenes", isolate(input$scorpMaxGenes)),
       c("scorpRepeat", isolate(input$scorpRepeat)),
       c("scorpInFile", isolate(input$trajInputFile))
     ),
     button = "updatetScorpiusParameters"
   )
+  .schnappsEnv$defaultValues[["dimScorpiusX"]] <- isolate(input$dimScorpiusX)
+  .schnappsEnv$defaultValues[["dimScorpiusY"]] <- isolate(input$dimScorpiusY)
+  .schnappsEnv$defaultValues[["dimScorpiusCol"]] <- isolate(input$dimScorpiusCol)
+  .schnappsEnv$defaultValues[["scorpMaxGenes"]] <- isolate(input$scorpMaxGenes)
+  .schnappsEnv$defaultValues[["scorpRepeat"]] <- isolate(input$scorpRepeat)
   
 })
 
@@ -373,7 +339,7 @@ output$scropius_trajectory_plot <- renderPlot({
   if (!is.null(getDefaultReactiveDomain())) {
     showNotification("scropius_trajectory_plot", id = "scropius_trajectory_plot", duration = NULL)
   }
-  
+  # sdi = Scorpius_dataInput() # variable not used but display depends on this => causes endless loop??
   traj <- scorpiusTrajectory()
   projections <- isolate(scorpius_projections())
   space <- isolate(scorpiusSpace())
@@ -405,7 +371,7 @@ output$scropius_trajectory_plot <- renderPlot({
     n = 12, name =
       "Paired"
   ))(length(levels(prj)))
-  
+  names(mycolPal) = levels(prj)
   if (dimCol == "sampleNames") {
     mycolPal <- sampCol
   }
@@ -414,7 +380,7 @@ output$scropius_trajectory_plot <- renderPlot({
   }
   
   
-  if (is.null(space) | vChanged) {
+  if (is.null(space) |is.null(traj) | vChanged) {
     if (vChanged) {
       cat(file = stderr(), "scropius Values changed\n")
     }
@@ -422,15 +388,19 @@ output$scropius_trajectory_plot <- renderPlot({
       ggplot2::geom_point(colour = mycolPal[projections[,dimCol]]) + 
       theme_classic()
     return(p1)
-  }
+  } else {
   
   # space <- projections[, c(dimX, dimY)]
-  require(SCORPIUS)
-  # traj <- SCORPIUS::infer_trajectory(space)
+  require(SCORPIUSbj)
+  # traj <- SCORPIUSbj::infer_trajectory(space)
+  # dimCol="CELLTYPES"
   colnames(traj) <- c("Comp1", "Comp2", "time")
-  draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], 
+  p1 = draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], 
                        progression_group_palette = mycolPal[projections[,dimCol]],
                        path = as.matrix(traj[, 1:2]))
+  }
+  return(p1)
+  
 })
 
 callModule(tableSelectionServer, "scorpiusTableMod", scorpiusModulesTable)
@@ -464,7 +434,7 @@ scorpiusHeatmapPlotReactive <- reactive({
   width <- session$clientData$output_plot_width
   height <- session$clientData$output_plot_height
   
-  
+  # browser()
   if (is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(traj)) {
     if (DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
     return(NULL)
@@ -598,14 +568,14 @@ elpiHeatmapPlotReactive <- reactive({
   
   
   if (is.null(projections) | is.null(modules) | is.null(expr_sel) | is.null(psTime)) {
-    if (.schnappsEnv$DEBUG) cat(file = stderr(), paste("scorpiusHeatmapPlot:NULL\n"))
+    if (.schnappsEnv$DEBUG) cat(file = stderr(), paste("elpiHeatmapPlot:NULL\n"))
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/elpiHeatmapPlotReactive.RData", list = c(ls()))
   }
   # load(file="~/SCHNAPPsDebug/elpiHeatmapPlotReactive.RData")
-  
+  # browser()
   if (is.null(pixelratio)) pixelratio <- 1
   if (is.null(width)) {
     width <- 96 * 7
@@ -678,7 +648,7 @@ callModule(
 #   pst = psTime$Pt[which(!is.na(psTime$Pt))]
 #
 #
-#   p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
+#   p <- SCORPIUSbj::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
 #                                          modules=modules, show_labels_row = TRUE)
 #
 # })
@@ -1049,6 +1019,13 @@ output$coE_temporaPWgenes = renderText({
   
 })
 ## observe dimX/Y ----
+
+observe({
+  .schnappsEnv$defaultValues[["dimTemporaX"]] = input$dimTemporaX
+  .schnappsEnv$defaultValues[["dimTemporaY"]] = input$dimTemporaY
+  
+})
+
 observe({
   projections = projections()
   if (is.null(projections)) {
@@ -1057,11 +1034,11 @@ observe({
   
   updateSelectInput(session, "dimTemporaX",
                     choices = colnames(projections),
-                    selected = .schnappsEnv$dimTemporaX
+                    selected = defaultValue("dimTemporaX","tsne1")
   )
   updateSelectInput(session, "dimTemporaY",
                     choices = colnames(projections),
-                    selected = .schnappsEnv$dimTemporaY
+                    selected = defaultValue("dimTemporaY","tsne2")
   )
 })
 
@@ -1074,11 +1051,11 @@ observe({
   
   updateSelectInput(session, "temporaCluster",
                     choices = projFactors,
-                    selected = .schnappsEnv$temporaCluster
+                    selected = defaultValue("temporaCluster",projFactors[1])
   )
   updateSelectInput(session, "temporaFactor",
                     choices = projFactors,
-                    selected = .schnappsEnv$temporaFactor
+                    selected = defaultValue("temporaFactor",projFactors[1])
   )
   
 })
@@ -1088,6 +1065,7 @@ observe({
   projections <- projections()
   temporaFactor = input$temporaFactor
   selectedCells <- isolate(Tempora_dataInput()) #DE_Exp_dataInput
+  if(is.null(selectedCells)) return(NULL)
   cellNs <- selectedCells$cellNames()
   
   
@@ -1105,7 +1083,7 @@ observe({
   # cp = load("~/SCHNAPPsDebug/temporaobserveFactor.RData")
   updateSelectInput(session, "temporaLevels",
                     choices = unique(cdat[,temporaFactor]),
-                    selected = .schnappsEnv$temporaFactor)
+                    selected = defaultValue("temporaFactor","tsne1"))
   
 })
 

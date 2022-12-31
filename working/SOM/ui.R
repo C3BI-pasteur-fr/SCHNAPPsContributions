@@ -26,19 +26,19 @@ tabList = list(
         box(
           fluidRow(
             column(width = 3,
-                   numericInput("coE_dimSOM", "number of nodes per dimension",
-                                20,
+                   sc_numericInput("coE_dimSOM", "number of nodes per dimension",
+                                   defaultValue("coE_dimSOM", 20),
                                 min = 2, max = 100
                    )
             ), 
             column(width = 3,
-                   textInput("coE_geneSOM", "Gene of interest", value = defaultValueSingleGene)
+                   sc_textInput("coE_geneSOM", "Gene of interest", value = defaultValue("coE_geneSOM", "notyet"))
             ),
             column(width = 3,
-                   selectInput("coE_distSOM",
+                   sc_selectInput("coE_distSOM",
                                label = "Distance",
                                choices = c("raw", "Spearman", "standardized"),
-                               selected = "raw"
+                               selected = defaultValue("coE_distSOM","raw")
                    )
             )
           )
@@ -83,15 +83,15 @@ tabList = list(
       br(),
       fluidRow(column(
         width = 6,
-        numericInput("coE_dimSOMX", "row",
-                     1,
+        sc_numericInput("coE_dimSOMX", "row",
+                     defaultValue("coE_dimSOMX",1),
                      min = 1, max = 100
         )
       ),
       column(
         width = 6,
-        numericInput("coE_dimSOMY", "column",
-                     1,
+        sc_numericInput("coE_dimSOMY", "column",
+                     defaultValue("coE_dimSOMY",1),
                      min = 1, max = 100
         )
       ),
@@ -99,6 +99,11 @@ tabList = list(
       fluidRow(column(
         width = 12,
         verbatimTextOutput("coE_somInfo")
+      )),
+      br(),
+      fluidRow(column(
+        width = 12,
+        verbatimTextOutput("coE_somInfoSymbol")
       ))
       )
     )

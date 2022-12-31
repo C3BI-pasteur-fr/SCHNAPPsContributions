@@ -2,6 +2,7 @@
 # when clicked we actually do something
 # observeEvent(input$updateCellID, )
 
+library(CelliD)
 
 cellIdReactive <- reactive({
   require(CellID)
@@ -28,7 +29,7 @@ cellIdReactive <- reactive({
     return(NULL)
   }
   if (.schnappsEnv$DEBUGSAVE) {
-  save(file = "~/SCHNAPPsDebug/updateCellID.RData", list = c(ls()))
+    save(file = "~/SCHNAPPsDebug/updateCellID.RData", list = c(ls()))
   }
   # cp = load(file="~/SCHNAPPsDebug/updateCellID.RData")
   rownames(scEx_log) = make.names(make.unique(rowData(scEx_log)$symbol))
@@ -49,7 +50,7 @@ cellIdReactive <- reactive({
            scEx_log = RunMCA(scEx_log, nmcs = nmcs)
            scEx_log = RunMCUMAP(scEx_log, dims =  seq(nmcs))
          }
-         )
+  )
   # browser()
   rd = as.data.frame( reducedDim(scEx_log, "MCA")[colnames(scEx_log),])
   if (ncol(prjs) > 0) {
@@ -66,6 +67,7 @@ cellIdReactive <- reactive({
   }else {
     prjs <- as.data.frame( rd)
   }
+  # browser()
   sessionProjections$prjs <- prjs
   
   setRedGreenButton(
@@ -75,6 +77,10 @@ cellIdReactive <- reactive({
     ),
     button = "updateCellID"
   )
+  
+  .schnappsEnv$defaultValues[["cellID_Method"]] = isolate(input$cellID_Method)
+  .schnappsEnv$defaultValues[["cellID_nmcs"]] = isolate(input$cellID_nmcs)
+  
   
   # return the singleCellExperiment object with the redudced dimensions
   retVal <- scEx_log
@@ -214,6 +220,8 @@ cellIDGeneSetReact <- reactive({
   }
   # Just print text with the names
   retVal <- resFrame
+  .schnappsEnv$defaultValues[["cellID_gBy"]] = isolate(input$cellID_gBy)
+  
   exportTestValues(cellIDGeneSetReact = {
     retVal
   })

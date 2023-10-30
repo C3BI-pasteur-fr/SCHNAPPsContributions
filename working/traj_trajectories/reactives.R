@@ -196,6 +196,10 @@ scorpiusSpace <- reactive({
     if (DEBUG) cat(file = stderr(), paste("scorpiusSpace:NULL\n"))
     return(NULL)
   }
+  if(!all( c(dimX, dimY) %in% colnames(projections))){
+    if (DEBUG) cat(file = stderr(), paste("scorpiusSpace: dimx/y NULL\n"))
+    return(NULL)
+  }
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/scorpiusSpace.RData", list = c(ls()))
   }

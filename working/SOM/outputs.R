@@ -87,9 +87,7 @@ output$coE_somInfoSymbol <- renderText({
   idxy = input$coE_dimSOMY - 1
   res2 = coE_somTrainReact()
   scEx_log = scEx_log()
-  
   featureData <- rowData(scEx_log)
-  geneName = geneName2Index(genesin, featureData)
   
   if (.schnappsEnv$DEBUGSAVE) {
     save(file = "~/SCHNAPPsDebug/coE_somInfo.RData", list = c(ls()))

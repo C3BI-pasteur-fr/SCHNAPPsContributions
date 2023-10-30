@@ -347,9 +347,9 @@ output$scropius_trajectory_plot <- renderPlot({
   dimX <- input$dimScorpiusX
   dimY <- input$dimScorpiusY
   dimCol <- input$dimScorpiusCol
-  sampCol <- sampleCols$colPal
-  ccols <- clusterCols$colPal
-  
+  # sampCol <- sampleCols$colPal
+  # ccols <- clusterCols$colPal
+  pc <- projectionColors %>% reactiveValuesToList()
   # doCalc <- input$scorpiusCalc
   
   if (is.null(projections) ) {
@@ -367,24 +367,25 @@ output$scropius_trajectory_plot <- renderPlot({
   ))
   
   prj = projections[,dimCol]
-  mycolPal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(
-    n = 12, name =
-      "Paired"
-  ))(length(levels(prj)))
-  names(mycolPal) = levels(prj)
-  if (dimCol == "sampleNames") {
-    mycolPal <- sampCol
-  }
-  if (dimCol == "dbCluster") {
-    mycolPal <- ccols
-  }
+  # mycolPal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(
+  #   n = 12, name =
+  #     "Paired"
+  # ))(length(levels(prj)))
+  # names(mycolPal) = levels(prj)
+  mycolPal = pc[[dimCol]]
+  # if (dimCol == "sampleNames") {
+  #   mycolPal <- sampCol
+  # }
+  # if (dimCol == "dbCluster") {
+  #   mycolPal <- ccols
+  # }
   
-  
+  # browser()
   if (is.null(space) |is.null(traj) | vChanged) {
     if (vChanged) {
       cat(file = stderr(), "scropius Values changed\n")
     }
-    p1 <- ggplot2::ggplot(projections, aes_string(dimX, dimY)) + 
+    p1 <- ggplot2::ggplot(projections, aes(.data[[dimX]], .data[[dimY]])) + 
       ggplot2::geom_point(colour = mycolPal[projections[,dimCol]]) + 
       theme_classic()
     return(p1)
@@ -402,6 +403,7 @@ output$scropius_trajectory_plot <- renderPlot({
   return(p1)
   
 })
+
 
 callModule(tableSelectionServer, "scorpiusTableMod", scorpiusModulesTable)
 # selected clusters heatmap module

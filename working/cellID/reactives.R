@@ -2,7 +2,7 @@
 # when clicked we actually do something
 # observeEvent(input$updateCellID, )
 
-library(CelliD)
+library(CellID)
 
 cellIdReactive <- reactive({
   require(CellID)

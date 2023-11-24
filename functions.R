@@ -1,5 +1,18 @@
 # modified version of Read10X_h5 from Seurat to include the sample name in the barcode
-
+#' Read HDF5 File
+#' 
+#' Reads data from an HDF5 file and returns a sparse matrix or a list of sparse matrices.
+#' modified version of Read10X_h5 from Seurat to include the sample name in the barcode
+#' 
+#' @param filename The path to the HDF5 file.
+#' @param use.names Logical, indicating whether to use feature names or IDs.
+#' @param unique.features Logical, indicating whether to make feature names unique.
+#' @param sampleName A character string specifying the sample name to be appended to column names.
+#' 
+#' @return A sparse matrix or a list of sparse matrices containing the data from the HDF5 file.
+#' 
+#' @export readH5
+#' 
 readH5 <- function(filename, use.names = TRUE, unique.features = TRUE, sampleName = "1") {
   if (!requireNamespace("hdf5r", quietly = TRUE)) {
     stop("Please install hdf5r to read HDF5 files")

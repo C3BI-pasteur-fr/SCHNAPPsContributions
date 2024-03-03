@@ -1,7 +1,7 @@
 require(ElPiGraph.R)
 require(plyr)
 library(dplyr)
-library(SCORPIUSbj)
+library(SCORPIUS)
 
 
 # Scorpius ----------------------------------------------------------------
@@ -392,8 +392,8 @@ output$scropius_trajectory_plot <- renderPlot({
   } else {
   
   # space <- projections[, c(dimX, dimY)]
-  require(SCORPIUSbj)
-  # traj <- SCORPIUSbj::infer_trajectory(space)
+  require(SCORPIUS)
+  # traj <- SCORPIUS::infer_trajectory(space)
   # dimCol="CELLTYPES"
   colnames(traj) <- c("Comp1", "Comp2", "time")
   p1 = draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], 
@@ -650,7 +650,7 @@ callModule(
 #   pst = psTime$Pt[which(!is.na(psTime$Pt))]
 #
 #
-#   p <- SCORPIUSbj::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
+#   p <- SCORPIUS::draw_trajectory_heatmap(x = expr_sel, time = pst, progression_group = projections$dbCluster[which(!is.na(psTime$Pt))] ,
 #                                          modules=modules, show_labels_row = TRUE)
 #
 # })

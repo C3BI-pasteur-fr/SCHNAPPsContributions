@@ -257,7 +257,7 @@ scorpiusTrajectory <- reactive({
     if (DEBUG) cat(file = stderr(), paste("scorpiusTrajectory:NULL; need more samples/columns\n"))
     return(NULL)
   }
-  require(SCORPIUSbj)
+  require(SCORPIUS)
   dig = digest(space, algo = "sha256")
   if(!is.null(.schnappsEnv$react.scorpiusTrajectory) & length(.schnappsEnv$react.scorpiusTrajectory)==2){
     if (dig == .schnappsEnv$react.scorpiusTrajectory[[1]]){
@@ -265,7 +265,7 @@ scorpiusTrajectory <- reactive({
     }
   }
   
-  traj <- SCORPIUSbj::infer_trajectory(space,thresh = 0.00001)
+  traj <- SCORPIUS::infer_trajectory(space,thresh = 0.00001)
   traj$path = data.frame(traj$path)
   traj$path$idx <- 1:nrow(traj$path)
   traj$path <- traj$path[order(traj$time),] 
@@ -739,7 +739,7 @@ traj_elpi_modules <- reactive({
     }
   }
   
-  modules <- SCORPIUSbj::extract_modules(SCORPIUS::scale_quantile(expr_sel))
+  modules <- SCORPIUS::extract_modules(SCORPIUS::scale_quantile(expr_sel))
   modules <- as.data.frame(modules)
   fd <- rowData(scEx_log)
   modules$symbol <- fd[modules$feature, "symbol"]
@@ -795,7 +795,7 @@ traj_elpi_gimp <- reactive({
   # load(file="~/SCHNAPPsDebug/traj_elpi_gimp.RData")
   
   set.seed(seed)
-  require(SCORPIUSbj)
+  require(SCORPIUS)
   logCounts <- as.matrix(assays(scEx_log)[[1]][,which(!is.na(psTime$Pt))])
   pst = psTime$Pt[which(!is.na(psTime$Pt))]
   dig = digest(list(logCounts, pst, num_permutations, ntree, ntree_perm), algo = "sha256")
@@ -804,7 +804,7 @@ traj_elpi_gimp <- reactive({
       return(.schnappsEnv$react.traj_elpi_gimp[[2]])
     }
   }
-  geneImport <- SCORPIUSbj::gene_importances(t(logCounts), pst, num_permutations = num_permutations, ntree = ntree,
+  geneImport <- SCORPIUS::gene_importances(t(logCounts), pst, num_permutations = num_permutations, ntree = ntree,
                                              ntree_perm = ntree_perm, mtry = ncol(logCounts) * 0.01, num_threads = detectCores()-1)
   gene_sel <- geneImport[1:nGenes,]
   expr_sel <- t(logCounts)[, gene_sel$gene]
@@ -1431,7 +1431,7 @@ tempora2DPlotFunc <- function(temporaObj, projections, dimX, dimY, dimCol) {
   require(ggrepel)
   require(network)
   space <- projections[, c(dimX, dimY)]
-  require(SCORPIUSbj)
+  require(SCORPIUS)
   
   
   # temporaObj@cluster.metadata
@@ -1454,7 +1454,7 @@ tempora2DPlotFunc <- function(temporaObj, projections, dimX, dimY, dimCol) {
       net[x[[2]],x[[1]]] <<- 1
     }
   } )
-  # traj <- SCORPIUSbj::infer_trajectory(space)
+  # traj <- SCORPIUS::infer_trajectory(space)
   n = as.network(net)
   # 
   # gnn = ggnetwork(n, layout = as.matrix(mean.points[,2:3]))

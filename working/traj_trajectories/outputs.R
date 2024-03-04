@@ -352,7 +352,7 @@ output$scropius_trajectory_plot <- renderPlot({
   pc <- projectionColors %>% reactiveValuesToList()
   # doCalc <- input$scorpiusCalc
   
-  if (is.null(projections) ) {
+  if (is.null(projections) | !all(c(dimCol, dimX, dimY) %in% colnames(projections))) {
     if (DEBUG) cat(file = stderr(), "scropius_trajectory_plot:NULL\n")
     return(NULL)
   }

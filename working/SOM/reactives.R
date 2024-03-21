@@ -63,6 +63,7 @@ coE_somTrain <- function(inputData, nSom) {
   return(res2)
 } 
 
+# coE_somMap ----
 coE_somMap <- function(res2, inputData) {
   if (DEBUG) cat(file = stderr(), "coE_somMap started.\n")
   start.time <- base::Sys.time()
@@ -110,10 +111,16 @@ coE_somGenes <- function(res2, geneName) {
   if (is.null(res2) ) {
     return(NULL)
   }
+  if(length(geneName)>1){
+    geneName = geneName[1]
+    if (!is.null(getDefaultReactiveDomain())) {
+      showNotification("only taking first gene", id = "coE_somGenesProblem", duration = NULL, type = "warning")
+    }
+    cat(file = stderr(), "coE_somGenes only taking first gene.\n")
+  }
   if (!geneName %in% rownames(res2$globalBmus)) {
     return(NULL)
   }
-  
   simGenes <- rownames(res2$globalBmus)[which(res2$globalBmus[, 1] == res2$globalBmus[geneName, 1] &
                                                 res2$globalBmus[, 2] == res2$globalBmus[geneName, 2])]
   
@@ -132,7 +139,7 @@ observe(label = "ob14", {
   .schnappsEnv$coE_SOMSelection <- input$coE_SOMSelection
 })
 
-# # coE_updateInputSOMt ====
+# # coE_updateInputSOMt
 # coE_updateInputSOMt <- reactive({
 #   if (DEBUG) cat(file = stderr(), "coE_updateInputSOMt started.\n")
 #   start.time <- base::Sys.time()
@@ -189,7 +196,7 @@ observe(label = "ob14", {
 #   
 # })
 
-
+# somInputData ====
 somInputData <- reactive({
   if (DEBUG) cat(file = stderr(), "somInputData started.\n")
   start.time <- base::Sys.time()
@@ -208,6 +215,7 @@ somInputData <- reactive({
   }
   scEx_log <- scEx_log()
   input$updateSOMParameters
+  
   selectedCells <- isolate(coE_SOM_dataInput())
   inputCells <- isolate(selectedCells$cellNames())
   method <- isolate(input$coE_distSOM)
@@ -223,6 +231,7 @@ somInputData <- reactive({
   
   cols2use <- which (colnames(scEx_log) %in% inputCells)
   scEx_log = scEx_log[,cols2use]
+  # browser()
   iData <- switch(method,
                   "raw" = {as.matrix(assays(scEx_log)[[1]])},
                   "Spearman" = {
@@ -243,6 +252,7 @@ somInputData <- reactive({
   return(iData)
 })
 
+# coE_somMapReact ====
 coE_somMapReact <- reactive({
   if (DEBUG) cat(file = stderr(), "coE_somMapReact started.\n")
   start.time <- base::Sys.time()
@@ -259,6 +269,7 @@ coE_somMapReact <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     removeNotification(id = "heatmapWarning")
   }
+  # browser()
   
   scEx_log <- scEx_log()
   # input$updateSOMParameters
@@ -282,7 +293,7 @@ coE_somMapReact <- reactive({
   return(sommap)
 })
 
-
+# coE_somTrainReact ====
 coE_somTrainReact <- reactive({
   if (DEBUG) cat(file = stderr(), "coE_somTrainReact started.\n")
   start.time <- base::Sys.time()
@@ -299,7 +310,7 @@ coE_somTrainReact <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     removeNotification(id = "heatmapWarning")
   }
-  
+  # browser()
   scEx_log <- scEx_log()
   input$updateSOMParameters
   
@@ -324,7 +335,7 @@ coE_somTrainReact <- reactive({
 })
 
 
-
+# coE_somGenesReact ====
 coE_somGenesReact <- reactive({
   if (DEBUG) cat(file = stderr(), "coE_somGenesReact started.\n")
   start.time <- base::Sys.time()
@@ -362,6 +373,15 @@ coE_somGenesReact <- reactive({
   featureData <- rowData(scEx_log)
   geneName = geneName2Index(genesin, featureData)
   if(length(geneName) == 0) {return(NULL)}
+  
+  if(length(geneName)>1){
+    geneName = geneName[1]
+    cat(file = stderr(), "coE_somGenesReact taking only first gene\n")
+    if (!is.null(getDefaultReactiveDomain())) {
+      showNotification("coE_somGenesReact taking only first gene", id = "coE_somGenesReactWarn", 
+                       duration = NULL, type = "warning")
+    }
+  }
   genes = coE_somGenes(res2, geneName)
   
   idxX = res2$globalBmus[geneName, 1] + 1
@@ -420,13 +440,14 @@ coE_heatmapSOMReactive <- reactive({
   if (!is.null(getDefaultReactiveDomain())) {
     removeNotification(id = "heatmapWarning")
   }
-  
+  # browser()
   scEx_log <- isolate(scEx_log())
   projections <- isolate(projections())
   # input$updateSOMParameters
-  sampCol <- sampleCols$colPal
-  ccols <- clusterCols$colPal
+  sampCol <- projectionColors$sampleNames
+  ccols <- projectionColors$dbCluster
   # coE_updateInputSOMt()
+  # browser()
   
   # genesin <- isolate(input$coE_geneSOM)
   geneNames = coE_somGenesReact()
@@ -486,7 +507,7 @@ coE_heatmapSOMReactive <- reactive({
     "sampleNames" = sampCol,
     prj = ccols
   )
-  
+  browser()
   retVal <- list(
     mat = scEx_matrix[geneNames, cellNs, drop = FALSE],
     cluster_rows = TRUE,

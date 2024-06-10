@@ -507,7 +507,7 @@ coE_heatmapSOMReactive <- reactive({
     "sampleNames" = sampCol,
     prj = ccols
   )
-  browser()
+  # browser()
   retVal <- list(
     mat = scEx_matrix[geneNames, cellNs, drop = FALSE],
     cluster_rows = TRUE,

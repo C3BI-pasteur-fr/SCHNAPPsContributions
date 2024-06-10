@@ -1,8 +1,8 @@
 require(ElPiGraph.R)
 require(plyr)
-library(dplyr)
-library(SCORPIUS)
-
+require(dplyr)
+require(SCORPIUS)
+require(Tempora)
 
 # Scorpius ----------------------------------------------------------------
 ## observe scorpius Proj ---
@@ -61,7 +61,7 @@ observe(label = "ob20sc", {
   sessionProjections$prjs <- prjs
 })
 
-observe(label = "ob_scorpButton",priority = 99,
+observe(label = "ob_scorpButton", # priority = 99,
         {
           if (DEBUG) cat(file = stderr(), "observe ob_scorpButton\n")
           input$updatetScorpiusParameters
@@ -390,15 +390,15 @@ output$scropius_trajectory_plot <- renderPlot({
       theme_classic()
     return(p1)
   } else {
-  
-  # space <- projections[, c(dimX, dimY)]
-  require(SCORPIUS)
-  # traj <- SCORPIUS::infer_trajectory(space)
-  # dimCol="CELLTYPES"
-  colnames(traj) <- c("Comp1", "Comp2", "time")
-  p1 = draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], 
-                       progression_group_palette = mycolPal[projections[,dimCol]],
-                       path = as.matrix(traj[, 1:2]))
+    
+    # space <- projections[, c(dimX, dimY)]
+    require(SCORPIUS)
+    # traj <- SCORPIUS::infer_trajectory(space)
+    # dimCol="CELLTYPES"
+    colnames(traj) <- c("Comp1", "Comp2", "time")
+    p1 = draw_trajectory_plot(space, progression_group = projections[rownames(space), dimCol], 
+                              progression_group_palette = mycolPal[projections[,dimCol]],
+                              path = as.matrix(traj[, 1:2]))
   }
   return(p1)
   
@@ -657,7 +657,7 @@ callModule(
 
 ## elpi_plot ----
 output$elpi_plot <- renderPlot({
-  if (DEBUG) cat(file = stderr(), "elpi_plot started.\n")
+  if (DEBUG) cat(file = stderr(), "===elpi_plot started.\n")
   start.time <- base::Sys.time()
   on.exit({
     printTimeEnd(start.time, "elpi_plot")
@@ -678,8 +678,9 @@ output$elpi_plot <- renderPlot({
   dimX <- input$dimElpiX
   dimY <- input$dimElpiY
   dimCol <- input$dimElpiCol
-  sampCol <- sampleCols$colPal
-  ccols <- clusterCols$colPal
+  pc = projectionColors %>% reactiveValuesToList()
+  # sampCol <- sampleCols$colPal
+  # ccols <- clusterCols$colPal
   
   vChanged = valuesChanged(parameters = c(
     "elpinReps","elpiNumNodes","elpiProbPoint","ElpiMethod",
@@ -694,28 +695,34 @@ output$elpi_plot <- renderPlot({
     base::save(file = "~/SCHNAPPsDebug/elpi_plot.RData", list = c(base::ls()))
   }
   # cp = load(file = "~/SCHNAPPsDebug/elpi_plot.RData")
-
+  
+  if(dimCol %in% names(pc)){
+    mycolPal = pc[[dimCol]]
+  } else {
+    mycolPal <- NULL
+  }
+  
   prj = projections[,dimCol]
-  mycolPal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(
-    n = 12, name =
-      "Paired"
-  ))(length(levels(prj)))
+  # mycolPal <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(
+  #   n = 12, name =
+  #     "Paired"
+  # ))(length(levels(prj)))
+  # mycolPal <- myColors
+  # if (dimCol == "sampleNames") {
+  #   mycolPal <- sampCol
+  # }
+  # if (dimCol == "dbCluster") {
+  #   mycolPal <- ccols
+  # }
   
-  if (dimCol == "sampleNames") {
-    mycolPal <- sampCol
-  }
-  if (dimCol == "dbCluster") {
-    mycolPal <- ccols
-  }
   
-  
-    if (is.null(cep) | vChanged) {
+  if (is.null(cep) | vChanged) {
     if (vChanged) {
       cat(file = stderr(), "elpi Values changed\n")
     }
     require(ggplot2)
-    p1 <- ggplot(projections, aes_string(dimX, dimY, colour = dimCol)) + geom_point()
-    p1 <- ggplot2::ggplot(projections, aes_string(dimX, dimY)) + 
+    # p1 <- ggplot(projections, aes(.data[[dimX]], .data[[dimY]], colour = .data[[dimCol]])) + geom_point()
+    p1 <- ggplot2::ggplot(projections, aes(.data[[dimX]], .data[[dimY]])) + 
       ggplot2::geom_point(colour = mycolPal[projections[,dimCol]]) + 
       theme_classic()
     return(p1)
@@ -738,13 +745,13 @@ output$elpi_plot <- renderPlot({
     LabMult = 5, PointSize = NA, p.alpha = .5,
     GroupsLab = projections[rownames(tree_data),dimCol]
   )
+  p[[1]] = p[[1]] + scale_color_manual(values = mycolPal[projections[,dimCol]])
+  # q <- ggplot_build(p[[1]])
+  # q$data[[1]]$colour = mycolPal[projections[,dimCol]]
+  # q <- ggplot_gtable(q)
+  # p[[1]] = ggplotify::as.ggplot(q)
   
-  q <- ggplot_build(p[[1]])
-  q$data[[1]]$colour = mycolPal[projections[,dimCol]]
-  q <- ggplot_gtable(q)
-  p[[1]] = ggplotify::as.ggplot(q)
   
-
   
   # p <- PlotPG(X = tree_data, TargetPG = cep[[length(cep)]], GroupsLab = PointLabel, p.alpha = 0.9)
   # p[[1]] <- p[[1]] + geom_label_repel(

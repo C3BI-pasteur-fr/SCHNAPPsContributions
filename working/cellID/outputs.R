@@ -1,4 +1,4 @@
-library(CellID)
+library(CelliD)
 # max expressed genes ----
 callModule(
   tableSelectionServer,

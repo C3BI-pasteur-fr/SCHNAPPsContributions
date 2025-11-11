@@ -2,10 +2,10 @@
 # when clicked we actually do something
 # observeEvent(input$updateCellID, )
 
-library(CellID)
+library(CelliD)
 
 cellIdReactive <- reactive({
-  require(CellID)
+  require(CelliD)
   if (DEBUG) cat(file = stderr(), "updateCellID started.\n")
   start.time <- base::Sys.time()
   on.exit({

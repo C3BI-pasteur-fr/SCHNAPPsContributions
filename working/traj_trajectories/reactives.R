@@ -1339,6 +1339,48 @@ temporaGeneIds = reactive({
   return(NULL)
 })
 
+CalculatePWProfiles_BJ <- function (object, gmt_path, method = "gsva", min.sz = 5, max.sz = 200, 
+          parallel.sz = 1) 
+{
+  if (class(object)[1] != "Tempora") {
+    stop("Not a valid Tempora object")
+  }
+  cat("Calculating cluster average gene expression profile...")
+  exprMatrix <- object@data
+  exprMatrix_bycluster <- list()
+  pathwaygmt <- GSEABase::getGmt(gmt_path)
+  for (i in sort(unique(object@meta.data$Clusters))) {
+    exprMatrix_bycluster[[i]] <- rowMeans(exprMatrix[, which(colnames(exprMatrix) %in% 
+                                                               rownames(object@meta.data)[which(object@meta.data$Clusters == 
+                                                                                                  i)])])
+  }
+  names(exprMatrix_bycluster) <- sort(unique(object@meta.data$Clusters))
+  exprMatrix_bycluster <- do.call(cbind, exprMatrix_bycluster)
+  colnames(exprMatrix_bycluster) <- sort(unique(object@meta.data$Clusters))
+  rownames(exprMatrix_bycluster) <- rownames(exprMatrix)
+  cat("\nCalculating cluster pathway enrichment profiles...\n")
+  
+  # as.matrix(exprMatrix_bycluster)
+  
+  
+  gsvapar <- gsvaParam(as.matrix(exprMatrix_bycluster), pathwaygmt, maxDiff=TRUE)
+  gsva_es <- gsva(gsvapar)
+  
+  # gsva_es <- GSVA::gsva(as.matrix(exprMatrix_bycluster), 
+  #                       pathwaygmt, method = method, min.sz = min.sz, max.sz = max.sz, 
+  #                       parallel.sz = parallel.sz)
+  colnames(gsva_es) <- colnames(exprMatrix_bycluster)
+  object@cluster.pathways <- gsva_es
+  gsva_bycluster_pca <- prcomp(t(gsva_es), scale = T, 
+                               center = T)
+  screeplot(gsva_bycluster_pca, npcs = 25, type = "lines", 
+            main = "PCA on pathway enrichment analysis result")
+  object@cluster.pathways.dr <- gsva_bycluster_pca
+  validObject(object)
+  return(object)
+}
+
+
 # temporaPWProfiles ----
 temporaPWProfiles <- reactive({
   if (DEBUG) cat(file = stderr(), "temporaPWProfiles started.\n")
@@ -1388,7 +1430,7 @@ temporaPWProfiles <- reactive({
   }
   # DEBUG
   # gmt_path$datapath = "~/Rstudio/SCHNAPPsContributions/Mouse_GOBP_AllPathways_no_GO_iea_February_05_2021_symbol.gmt"
-  temporaObj <- CalculatePWProfiles(temporaObj, 
+  temporaObj <- CalculatePWProfiles_BJ(object = temporaObj, 
                                     gmt_path = gmt_path$datapath,
                                     method="gsva", 
                                     min.sz = min.sz, 
@@ -1434,9 +1476,9 @@ temporaTrajectory <- reactive({
                     difference_threshold = difference_threshold)
   },
   error = function(e) {
-    cat(file = stderr(), "tempora BuildTrajectory")
+    cat(file = stderr(), paste("tempora BuildTrajectory",e))
     if (!is.null(getDefaultReactiveDomain())) {
-      showNotification("tempora BuildTrajectory", 
+      showNotification(paste("tempora BuildTrajectory",e), 
                        id = "temporaBuildTrajectory", type = "error", duration = NULL)
     }
     return(NULL)

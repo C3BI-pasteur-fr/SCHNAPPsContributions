@@ -15,7 +15,7 @@ cortex_tempora <- ImportSeuratObject(mc3, clusters = "res.0.6",
                                      timepoint_order = c("e11", "e13", "e15", "e17"))
 
 #Estimate pathway enrichment profiles of clusters
-cortex_tempora <- CalculatePWProfiles(cortex_tempora, 
+cortex_tempora <- CalculatePWProfiles_BJ(cortex_tempora, 
                                       gmt_path = "Mouse_GOBP_AllPathways_no_GO_iea_February_05_2021_symbol.gmt",
                                       method="gsva", min.sz = 5, max.sz = 200, parallel.sz = 8)
 
@@ -69,7 +69,7 @@ PlotVarGenesByClustering <- function(clusterName, scInput, npcs) {
   
   
   #Estimate pathway enrichment profiles of clusters
-  cortex_tempora <- CalculatePWProfiles(cortex_tempora, 
+  cortex_tempora <- CalculatePWProfiles_BJ(cortex_tempora, 
                                         gmt_path = "Mouse_GOBP_AllPathways_no_GO_iea_February_05_2021_symbol.gmt",
                                         method="gsva", min.sz = 5, max.sz = 200, parallel.sz = 8)
   
@@ -155,7 +155,7 @@ cortex_tempora <- ImportSeuratObject(seuratobj = scInput,
 
 
 #Estimate pathway enrichment profiles of clusters
-cortex_tempora <- CalculatePWProfiles(cortex_tempora, 
+cortex_tempora <- CalculatePWProfiles_BJ(cortex_tempora, 
                                       gmt_path = "../Tempora/Mouse_GOBP_AllPathways_no_GO_iea_March_01_2021_symbol.gmt",
                                       method="gsva", min.sz = 5, max.sz = 200, parallel.sz = 8)
 

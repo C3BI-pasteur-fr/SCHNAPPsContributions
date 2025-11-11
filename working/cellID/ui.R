@@ -1,4 +1,4 @@
-library(CellID)
+library(CelliD)
 menuList <- list(
   shinydashboard::menuItem("Cell-ID",
                            icon = icon("dashboard"),

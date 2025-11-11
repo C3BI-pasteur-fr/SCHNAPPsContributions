@@ -379,7 +379,7 @@ tabList <- list(
                      sc_numericInput(
                        inputId = "temporaNPCs",
                        label = "N PCs to use",
-                       value = defaultValue("temporaNPCs", 12)
+                       value = defaultValue("temporaNPCs", 5)
                      )
                    ),
                    column(

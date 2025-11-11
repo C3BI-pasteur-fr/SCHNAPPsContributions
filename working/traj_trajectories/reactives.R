@@ -2,6 +2,7 @@ require(ElPiGraph.R)
 require(Tempora)
 require(S4Vectors)
 require(SingleCellExperiment)
+require(GSVA)
 
 # retVal <- drawTrajectoryHeatmap(x=expr_sel, time=traj$time, progression_group=projections[, dimCol], modules,
 #                                 filename = normalizePath(outfile, mustWork = FALSE)
